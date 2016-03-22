@@ -37,7 +37,7 @@
 <link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="Swift,iOS,深入Swift,Swift基类,Swift Class Object" />
 
 
 
@@ -53,15 +53,28 @@
 
 
 
-<meta name="description" content="Think different">
-<meta property="og:type" content="website">
-<meta property="og:title" content="SatoshiChin's blog">
-<meta property="og:url" content="http://blog.SatoshiChin.com/index.html">
+<meta name="description" content="深入Swift主要介绍Swift的一些内部实现吧，对于实际开发倒是用处不是太大(笑
+Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump源码中可以找到objc_class结构类似于这样:
+// The class object in a 64-bit Mach-O file.
+    struct class64_t {
+      ui">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入Swift">
+<meta property="og:url" content="http://blog.SatoshiChin.com/2016/03/23/深入Swift/index.html">
 <meta property="og:site_name" content="SatoshiChin's blog">
-<meta property="og:description" content="Think different">
+<meta property="og:description" content="深入Swift主要介绍Swift的一些内部实现吧，对于实际开发倒是用处不是太大(笑
+Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump源码中可以找到objc_class结构类似于这样:
+// The class object in a 64-bit Mach-O file.
+    struct class64_t {
+      ui">
+<meta property="og:updated_time" content="2016-03-22T16:38:50.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="SatoshiChin's blog">
-<meta name="twitter:description" content="Think different">
+<meta name="twitter:title" content="深入Swift">
+<meta name="twitter:description" content="深入Swift主要介绍Swift的一些内部实现吧，对于实际开发倒是用处不是太大(笑
+Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump源码中可以找到objc_class结构类似于这样:
+// The class object in a 64-bit Mach-O file.
+    struct class64_t {
+      ui">
 
 
 
@@ -73,7 +86,7 @@
   };
 </script>
 
-  <title> SatoshiChin's blog </title>
+  <title> 深入Swift | SatoshiChin's blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -94,9 +107,7 @@
 
 
 
-  <div class="container one-column 
-   page-home 
-">
+  <div class="container one-column page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -193,24 +204,9 @@
       <div class="main-inner">
         <div id="content" class="content">
           
-  <section id="posts" class="posts-expand">
 
+  <div id="posts" class="posts-expand">
     
-
-    
-    
-      
-      
-        
-        
-        
-      
-
-      
-    
-
-    
-      
 
   
   
@@ -230,10 +226,7 @@
             
             
               
-                
-                <a class="post-title-link" href="/2016/03/23/深入Swift/" itemprop="url">
-                  深入Swift
-                </a>
+                深入Swift
               
             
           </h1>
@@ -288,10 +281,7 @@
       
 
       
-        
-          <span itemprop="articleBody">
-            
-              <h2 id="深入Swift">深入Swift</h2><p>主要介绍Swift的一些内部实现吧，对于实际开发倒是用处不是太大(笑</p>
+        <span itemprop="articleBody"><h2 id="深入Swift">深入Swift</h2><p>主要介绍Swift的一些内部实现吧，对于实际开发倒是用处不是太大(笑</p>
 <h3 id="Class_object">Class object</h3><p>Swift类实际上而言就是Objective-C类，在llvm的llvm-objdump<a href="https://github.com/devxoul/CocoaSeeds&quot;" target="_blank" rel="external">源码</a>中可以找到objc_class结构类似于这样:</p>
 <pre><code><span class="comment">// The class object in a 64-bit Mach-O file.</span>
     <span class="keyword">struct</span> <span class="keyword">class64_t</span> {
@@ -339,31 +329,67 @@
 <p>这边有个比较重要的坑是:<br>通过Objective-C Runtime获取自己工程<code>OCProjectDemo</code>中的一个swift类，比如<code>Adapter</code>,mangle后类名会变成<code>OCProjectDemo.Adapter</code>(更确切地说是<code>_TtC13OCProjectDemo7Adapter</code>)</p>
 <p>所以想通过运行时相关方法创建类的实例的话，类名需要加上<code>ModuleName.</code>前缀。</p>
 <hr>
-
-            
-          </span>
-        
+</span>
       
     </div>
 
     <footer class="post-footer">
       
-
+        <div class="post-tags">
+          
+            <a href="/tags/Swift/" rel="tag">#Swift</a>
+          
+            <a href="/tags/iOS/" rel="tag">#iOS</a>
+          
+        </div>
       
 
       
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/03/23/SwiftPractise/" rel="next" title="实战后的Swift语言感想">
+                <i class="fa fa-chevron-left"></i> 实战后的Swift语言感想
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
       
-        <div class="post-eof"></div>
+
+      
       
     </footer>
   </article>
 
 
-    
 
-  </section>
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2016/03/23/深入Swift/"
+     data-title="深入Swift"
+     data-content=""
+     data-url="http://blog.SatoshiChin.com/2016/03/23/深入Swift/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
 
-  
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
 
 
         </div>
@@ -372,6 +398,14 @@
 
 
         
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/03/23/深入Swift/"
+           data-title="深入Swift" data-url="http://blog.SatoshiChin.com/2016/03/23/深入Swift/">
+      </div>
+    
+  </div>
+
 
       </div>
 
@@ -392,8 +426,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+      <section class="site-overview sidebar-panel ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" src="/uploads/avatar.png" alt="SatoshiChin" itemprop="image"/>
           <p class="site-author-name" itemprop="name">SatoshiChin</p>
@@ -448,6 +491,23 @@
 
       </section>
 
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator">
+            <i class="fa fa-angle-double-up"></i>
+          </div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#深入Swift"><span class="nav-number">1.</span> <span class="nav-text">深入Swift</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Class_object"><span class="nav-number">1.1.</span> <span class="nav-text">Class object</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Swift基类"><span class="nav-number">1.2.</span> <span class="nav-text">Swift基类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Method"><span class="nav-number">1.3.</span> <span class="nav-text">Method</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Property_&_ivar"><span class="nav-number">1.4.</span> <span class="nav-text">Property & ivar</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Name_mangling"><span class="nav-number">1.5.</span> <span class="nav-text">Name mangling</span></a></li></ol></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator">
+            <i class="fa fa-angle-double-down"></i>
+          </div>
+        </section>
       
 
     </div>
@@ -535,6 +595,167 @@
   <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
 
   
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 1 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
 
   <script type="text/javascript" src="/js/bootstrap.js"></script>
 
