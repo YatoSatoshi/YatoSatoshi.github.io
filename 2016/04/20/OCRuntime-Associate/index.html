@@ -37,7 +37,7 @@
 <link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Swift,iOS,深入Swift,Swift基类,Swift Class Object" />
+  <meta name="keywords" content="Objective-C,iOS,Runtime,源码解析,objc_setAssociatedObject,objc_getAssociatedObject,Associate" />
 
 
 
@@ -53,28 +53,22 @@
 
 
 
-<meta name="description" content="深入Swift主要介绍Swift的一些内部实现吧，对于实际开发倒是用处不是太大(笑
-Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump源码中可以找到objc_class结构类似于这样:
-// The class object in a 64-bit Mach-O file.
-    struct class64_t {
-      ui">
+<meta name="description" content="Objective-C Runtime源码解析之Associate方法简介1void objc_setAssociatedObject(id object, const void *key, id value, objc_AssociationPolicy policy)
+功能： 为一个对象以key-value的形式关联一个对象
+1id objc_getAssociatedObject(id ob">
 <meta property="og:type" content="article">
-<meta property="og:title" content="深入Swift">
-<meta property="og:url" content="http://blog.SatoshiChin.com/2016/03/23/深入Swift/index.html">
+<meta property="og:title" content="Objective-C Runtime源码解析之Associate">
+<meta property="og:url" content="http://blog.SatoshiChin.com/2016/04/20/OCRuntime-Associate/index.html">
 <meta property="og:site_name" content="SatoshiChin's blog">
-<meta property="og:description" content="深入Swift主要介绍Swift的一些内部实现吧，对于实际开发倒是用处不是太大(笑
-Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump源码中可以找到objc_class结构类似于这样:
-// The class object in a 64-bit Mach-O file.
-    struct class64_t {
-      ui">
-<meta property="og:updated_time" content="2016-03-22T16:38:50.000Z">
+<meta property="og:description" content="Objective-C Runtime源码解析之Associate方法简介1void objc_setAssociatedObject(id object, const void *key, id value, objc_AssociationPolicy policy)
+功能： 为一个对象以key-value的形式关联一个对象
+1id objc_getAssociatedObject(id ob">
+<meta property="og:updated_time" content="2016-04-19T16:21:21.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="深入Swift">
-<meta name="twitter:description" content="深入Swift主要介绍Swift的一些内部实现吧，对于实际开发倒是用处不是太大(笑
-Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump源码中可以找到objc_class结构类似于这样:
-// The class object in a 64-bit Mach-O file.
-    struct class64_t {
-      ui">
+<meta name="twitter:title" content="Objective-C Runtime源码解析之Associate">
+<meta name="twitter:description" content="Objective-C Runtime源码解析之Associate方法简介1void objc_setAssociatedObject(id object, const void *key, id value, objc_AssociationPolicy policy)
+功能： 为一个对象以key-value的形式关联一个对象
+1id objc_getAssociatedObject(id ob">
 
 
 
@@ -86,7 +80,7 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
   };
 </script>
 
-  <title> 深入Swift | SatoshiChin's blog </title>
+  <title> Objective-C Runtime源码解析之Associate | SatoshiChin's blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -226,7 +220,7 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
             
             
               
-                深入Swift
+                Objective-C Runtime源码解析之Associate
               
             
           </h1>
@@ -235,8 +229,8 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2016-03-23T00:23:42+08:00" content="2016-03-23">
-              2016-03-23
+            <time itemprop="dateCreated" datetime="2016-04-20T00:18:33+08:00" content="2016-04-20">
+              2016-04-20
             </time>
           </span>
 
@@ -245,8 +239,8 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/Swift/" itemprop="url" rel="index">
-                    <span itemprop="name">Swift</span>
+                  <a href="/categories/Objective-C/" itemprop="url" rel="index">
+                    <span itemprop="name">Objective-C</span>
                   </a>
                 </span>
 
@@ -261,8 +255,8 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/03/23/深入Swift/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/03/23/深入Swift/" itemprop="commentsCount"></span>
+                <a href="/2016/04/20/OCRuntime-Associate/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/20/OCRuntime-Associate/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -281,54 +275,70 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
       
 
       
-        <span itemprop="articleBody"><h2 id="深入Swift">深入Swift</h2><p>主要介绍Swift的一些内部实现吧，对于实际开发倒是用处不是太大(笑</p>
-<h3 id="Class_object">Class object</h3><p>Swift类实际上而言就是Objective-C类，在llvm的llvm-objdump<a href="https://github.com/devxoul/CocoaSeeds&quot;" target="_blank" rel="external">源码</a>中可以找到objc_class结构类似于这样:</p>
-<pre><code><span class="comment">// The class object in a 64-bit Mach-O file.</span>
-    <span class="keyword">struct</span> <span class="keyword">class64_t</span> {
-      <span class="keyword">uint64_t</span> isa;        <span class="comment">// class64_t * (64-bit pointer)</span>
-      <span class="keyword">uint64_t</span> superclass; <span class="comment">// class64_t * (64-bit pointer)</span>
-      <span class="keyword">uint64_t</span> cache;      <span class="comment">// Cache (64-bit pointer)</span>
-      <span class="keyword">uint64_t</span> vtable;     <span class="comment">// IMP * (64-bit pointer)</span>
-      <span class="keyword">uint64_t</span> data;       <span class="comment">// class_ro64_t * (64-bit pointer)</span>
+        <span itemprop="articleBody"><h2 id="Objective-C_Runtime源码解析之Associate">Objective-C Runtime源码解析之Associate</h2><h3 id="方法简介">方法简介</h3><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">objc_setAssociatedObject</span>(<span class="params">id <span class="keyword">object</span>, <span class="keyword">const</span> <span class="keyword">void</span> *key, id <span class="keyword">value</span>, objc_AssociationPolicy policy</span>)</span></span><br></pre></td></tr></table></figure>
+<p>功能： 为一个对象以key-value的形式关联一个对象</p>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">id</span> objc_getAssociatedObject(<span class="keyword">id</span> object, <span class="keyword">const</span> <span class="keyword">void</span> *key)</span><br></pre></td></tr></table></figure>
+<p>功能：以key-value的形式从一个对象中获取一个关联的对象</p>
+<h3 id="应用场景">应用场景</h3><p>这两个运行时方法，一般在日常开发中还是经常会用到。</p>
+<p>主要是向一个已经regist的类以k-v的形式关联值，达到property的作用。</p>
+<p>比如通过associate在category中加‘存储属性’</p>
+<p><strong>这篇博客就不具体介绍使用场景了，主要还是看看associate机制的内部实现原理。</strong></p>
+<h3 id="深入源码">深入源码</h3><p>不管是setAssociatedObject还是getAssociatedObject，都有2个版本，以get为例，一个是非gc的</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">id <span class="title">objc_getAssociatedObject_non_gc</span>(<span class="params">id <span class="keyword">object</span>, <span class="keyword">const</span> <span class="keyword">void</span> *key</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>而另一个是gc的</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">objc_getAssociatedObject_gc(id <span class="keyword">object</span>, <span class="keyword">const</span> <span class="keyword">void</span> *key);</span><br></pre></td></tr></table></figure>
+<p>作为iOS日常开发，接触的自然是非gc，那么看看non_gc版本的底层实现。</p>
+<p>内部调用了私有方法</p>
+<figure class="highlight ceylon"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">_</span><span class="keyword">object</span><span class="number">_</span>set<span class="number">_</span>associative<span class="number">_</span>reference(<span class="keyword">object</span>, (<span class="keyword">void</span> *)key, <span class="keyword">value</span>, policy)</span><br></pre></td></tr></table></figure>
+<p>查看该方法，可得出整个过程是：</p>
+<h4 id="objc_getAssociatedObject过程">objc_getAssociatedObject过程</h4><ol>
+<li>调用objc_getAssociatedObject_non_gc</li>
+<li>调用_object_get_associative_reference</li>
+<li>以组合对象object的地址取反作为key，取出包含了该对象所有关联值的map</li>
+<li>以传入的key作为key，取出map中的值，是一个关联值与policy的包装类</li>
+<li>根据associate的策略，对取出的包装类中的value send对应的内存管理msg: retain/autorelease</li>
+<li>返回value</li>
+</ol>
+<h4 id="objc_setAssociatedObject过程">objc_setAssociatedObject过程</h4><ol>
+<li>调用objc_setAssociatedObject_non_gc</li>
+<li>调用_object_set_associative_reference</li>
+<li>以组合对象object的地址取反作为key，取出包含了该对象所有关联值的map, 如果没有则创建一个</li>
+<li>创建ObjcAssociation包装value与policy，以传入的key作为key，set ObjcAssociation到map中</li>
+<li>根据associate的策略，对取出的value发送对应的内存管理消息retain/autorelease</li>
+<li>其中 在第2部后，如果value是空，则是查找到map后，取出老的value，删除对应的key与value，并根据policy release老的value</li>
+</ol>
+<h3 id="详解其中用到的类">详解其中用到的类</h3><h3 id="AssociationsManager">AssociationsManager</h3><p>associate主要依靠于<strong>AssociationsManager</strong>的类来管理。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> AssociationsManager &#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">spinlock_t</span> _lock;</span><br><span class="line">    <span class="keyword">static</span> AssociationsHashMap *_map;               <span class="comment">// associative references:  object pointer -&gt; PtrPtrHashMap.</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    AssociationsManager()   &#123; spinlock_lock(&amp;_lock); &#125;</span><br><span class="line">    ~AssociationsManager()  &#123; spinlock_unlock(&amp;_lock); &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function">AssociationsHashMap &amp;<span class="title">associations</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (_map == <span class="literal">NULL</span>)</span><br><span class="line">            _map = <span class="keyword">new</span> AssociationsHashMap();</span><br><span class="line">        <span class="keyword">return</span> *_map;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>简要介绍下这两个静态变量</p>
+<h4 id="spinlock_t_线程安全">spinlock_t 线程安全</h4><p>每次去set或者get关联对象是，都会创建一个AssociationsManager的临时变量，在构造方法中使自旋锁加锁，析构方法中解锁，从而达到线程安全。</p>
+<p>在这个场景由于是自旋锁，所以对性能影响较小。</p>
+<h4 id="AssociationsHashMap_内部存储">AssociationsHashMap 内部存储</h4><p>AssociationsManager中有个懒加载的属性associations，返回了静态变量: <code>AssociationsHashMap</code> _map</p>
+<p>全局有且仅有1个AssociationsHashMap</p>
+<p>AssociationsHashMap是个STL的<code>unordered_map</code>的子类，存储运行时下<code>所有 有关联值的 对象</code>的相关数据</p>
+<p><strong>key</strong>: 被组合对象的<strong>地址取反</strong></p>
+<p><strong>value</strong>: 继承自STL的<code>map</code>的子类<code>ObjectAssociationMap</code></p>
+<h4 id="ObjectAssociationMap">ObjectAssociationMap</h4><p>ObjectAssociationMap存储了<code>某一个具体对象</code>的<code>所有关联值</code></p>
+<p><strong>key</strong>: 上层方法传入的<strong>const void *key</strong></p>
+<p><strong>value</strong>: 一个class <strong>ObjcAssociation</strong> </p>
+<h4 id="ObjcAssociation">ObjcAssociation</h4><p>ObjcAssociation包装了关联值的内存策略_policy， 以及具体的value</p>
+<pre><code><span class="keyword">class</span> ObjcAssociation {
+        <span class="keyword">uintptr_t</span> _policy;
+        id _value;
+    <span class="keyword">public</span>:
+        ObjcAssociation(<span class="keyword">uintptr_t</span> policy, id value) : _policy(policy), _value(value) {}
+        ObjcAssociation() : _policy(<span class="number">0</span>), _value(nil) {}
+
+        <span class="keyword">uintptr_t</span> policy() <span class="keyword">const</span> { <span class="keyword">return</span> _policy; }
+        <span class="function">id <span class="title">value</span><span class="params">()</span> <span class="keyword">const</span> </span>{ <span class="keyword">return</span> _value; }
+
+        <span class="function"><span class="keyword">bool</span> <span class="title">hasValue</span><span class="params">()</span> </span>{ <span class="keyword">return</span> _value != nil; }
     };
-</code></pre><p>其中data指向了一个结构体，内容是类的ivar、method、protocol之类</p>
-<pre><code><span class="keyword">struct</span> <span class="keyword">class_ro64_t</span> {
-  <span class="keyword">uint32_t</span> flags;
-  <span class="keyword">uint32_t</span> instanceStart;
-  <span class="keyword">uint32_t</span> instanceSize;
-  <span class="keyword">uint32_t</span> reserved;
-  <span class="keyword">uint64_t</span> ivarLayout;     <span class="comment">// const uint8_t * (64-bit pointer)</span>
-  <span class="keyword">uint64_t</span> name;           <span class="comment">// const char * (64-bit pointer)</span>
-  <span class="keyword">uint64_t</span> baseMethods;    <span class="comment">// const method_list_t * (64-bit pointer)</span>
-  <span class="keyword">uint64_t</span> baseProtocols;  <span class="comment">// const protocol_list_t * (64-bit pointer)</span>
-  <span class="keyword">uint64_t</span> ivars;          <span class="comment">// const ivar_list_t * (64-bit pointer)</span>
-  <span class="keyword">uint64_t</span> weakIvarLayout; <span class="comment">// const uint8_t * (64-bit pointer)</span>
-  <span class="keyword">uint64_t</span> baseProperties; <span class="comment">// const struct objc_property_list (64-bit pointer)</span>
-};        
-</code></pre><p>和之前Objective-C runtime源码上的类没什么区别，主要是多了<code>vtable</code>这个入口，是个IMP(C 方法指针) *的数据结构，说明Swift确实用了vtable实现方法调用</p>
-<h3 id="Swift基类">Swift基类</h3><p>Swift表面上不需要继承基类，但是参看<a href="https://github.com/apple/swift" target="_blank" rel="external">Swift源码</a>，可以知道Swift还是有一个叫<code>SwiftObject</code>的Objective-C root类且实现了NSObject协议</p>
-<pre><code><span class="annotation">@interface</span> SwiftObject&lt;NSObject&gt; {
-  <span class="keyword">void</span> *<span class="function">magic_isa  <span class="title">__attribute__</span><span class="params">((unavailable)</span>)</span>;
-  <span class="function"><span class="keyword">long</span> magic_refCount  <span class="title">__attribute__</span><span class="params">((unavailable)</span>)</span>;
-}
-</code></pre><p>这个类目的之一是使Swift的类在alloc、retain等一些列操作时能运行Swift的runtime方法而不是Objective-C的</p>
-<pre><code>- (<span class="keyword">void</span>)release {
-      <span class="keyword">auto</span> SELF = <span class="keyword">reinterpret_cast</span>&lt;HeapObject *&gt;(self);
-      swift_release(SELF);
-}
-</code></pre><h3 id="Method">Method</h3><p>Swift方法调用在条件满足的情况下会尽可能的被优化成<code>内联</code>，否则一般情况下是<code>vtable dispatch</code>，这也是运行效率提升主要的点。</p>
-<p>在vtable中方法是IMP(c方法指针),而不是Objective-C中常见的Method，自然也无法被Objective-C的runtime获取到。</p>
-<p>当方法被<code>dynamic</code>标记时，会强行走dynamic dispatch 也就是msgSend那一套。</p>
-<p>当方法<code>@objc</code>标记时，官方也说不一定走动态派发，但是在这个情况下该方法确实能用Objective-C的runtime获取到。<em>所以个人猜测，@objc标记的方法既会在vtable中存在，也会在baseMethods中存在</em>，从而Swift侧不会影响效率，而Objective-C侧还是可以调用到。</p>
-<h3 id="Property_&amp;_ivar">Property &amp; ivar</h3><p>在Swift中Property和ivar的结构与Objective-C是一样，且都能被Objective-C的runtime相关方法获取到。写了个Demo测了下发现有几个坑：</p>
-<ul>
-<li>通过Objective-C runtime获取到的ivar的<code>TypeEncoding</code>永远是空 : (</li>
-<li>Swift调用属性时和Objective-C不同，可能<code>是内联的</code>,比如即使你hook了属性的set方法，但是对实际属性的set很可能没任何影响。</li>
+</code></pre><h3 id="总结">总结</h3><ul>
+<li>Associate是依靠AssociationsManager静态变量来实现</li>
+<li>存放关联值的形式近似可看成是map中套了个map，外层map映射了 有关联值 的对象，内层map映射了对象中具体的关联值</li>
+<li>Associate是线程安全的</li>
+<li>只看从map取值这个过程来看，时间复杂度大概是O(logN),效率还是挺高的 (ps: map内部是个红黑树，复杂度是O(logN), unordered_map内部是个hash表，时间复杂度可认为是O(1))</li>
 </ul>
-<h3 id="Name_mangling">Name mangling</h3><p>Swift的所有类，方法等都是会被Name mangling，所以也就自然支持了方法重载、命名空间等，以后用Swift写iOS终于可以不用写超长的前缀了: )</p>
-<p>这边有个比较重要的坑是:<br>通过Objective-C Runtime获取自己工程<code>OCProjectDemo</code>中的一个swift类，比如<code>Adapter</code>,mangle后类名会变成<code>OCProjectDemo.Adapter</code>(更确切地说是<code>_TtC13OCProjectDemo7Adapter</code>)</p>
-<p>所以想通过运行时相关方法创建类的实例的话，类名需要加上<code>ModuleName.</code>前缀。</p>
-<hr>
 </span>
       
     </div>
@@ -337,7 +347,9 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
       
         <div class="post-tags">
           
-            <a href="/tags/Swift/" rel="tag">#Swift</a>
+            <a href="/tags/Objective-C/" rel="tag">#Objective-C</a>
+          
+            <a href="/tags/Runtime/" rel="tag">#Runtime</a>
           
             <a href="/tags/iOS/" rel="tag">#iOS</a>
           
@@ -348,17 +360,13 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/03/23/SwiftPractise/" rel="next" title="实战后的Swift语言感想">
-                <i class="fa fa-chevron-left"></i> 实战后的Swift语言感想
+              <a href="/2016/03/23/深入Swift/" rel="next" title="深入Swift">
+                <i class="fa fa-chevron-left"></i> 深入Swift
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/04/20/OCRuntime-Associate/" rel="prev" title="Objective-C Runtime源码解析之Associate">
-                Objective-C Runtime源码解析之Associate <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -373,10 +381,10 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
 
     <div class="post-spread">
       
-        <div class="ds-share flat" data-thread-key="2016/03/23/深入Swift/"
-     data-title="深入Swift"
+        <div class="ds-share flat" data-thread-key="2016/04/20/OCRuntime-Associate/"
+     data-title="Objective-C Runtime源码解析之Associate"
      data-content=""
-     data-url="http://blog.SatoshiChin.com/2016/03/23/深入Swift/">
+     data-url="http://blog.SatoshiChin.com/2016/04/20/OCRuntime-Associate/">
   <div class="ds-share-inline">
     <ul  class="ds-share-icons-16">
 
@@ -404,8 +412,8 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
         
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/03/23/深入Swift/"
-           data-title="深入Swift" data-url="http://blog.SatoshiChin.com/2016/03/23/深入Swift/">
+      <div class="ds-thread" data-thread-key="2016/04/20/OCRuntime-Associate/"
+           data-title="Objective-C Runtime源码解析之Associate" data-url="http://blog.SatoshiChin.com/2016/04/20/OCRuntime-Associate/">
       </div>
     
   </div>
@@ -505,7 +513,7 @@ Class objectSwift类实际上而言就是Objective-C类，在llvm的llvm-objdump
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#深入Swift"><span class="nav-number">1.</span> <span class="nav-text">深入Swift</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Class_object"><span class="nav-number">1.1.</span> <span class="nav-text">Class object</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Swift基类"><span class="nav-number">1.2.</span> <span class="nav-text">Swift基类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Method"><span class="nav-number">1.3.</span> <span class="nav-text">Method</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Property_&_ivar"><span class="nav-number">1.4.</span> <span class="nav-text">Property & ivar</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Name_mangling"><span class="nav-number">1.5.</span> <span class="nav-text">Name mangling</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Objective-C_Runtime源码解析之Associate"><span class="nav-number">1.</span> <span class="nav-text">Objective-C Runtime源码解析之Associate</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#方法简介"><span class="nav-number">1.1.</span> <span class="nav-text">方法简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应用场景"><span class="nav-number">1.2.</span> <span class="nav-text">应用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#深入源码"><span class="nav-number">1.3.</span> <span class="nav-text">深入源码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#objc_getAssociatedObject过程"><span class="nav-number">1.3.1.</span> <span class="nav-text">objc_getAssociatedObject过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#objc_setAssociatedObject过程"><span class="nav-number">1.3.2.</span> <span class="nav-text">objc_setAssociatedObject过程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#详解其中用到的类"><span class="nav-number">1.4.</span> <span class="nav-text">详解其中用到的类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AssociationsManager"><span class="nav-number">1.5.</span> <span class="nav-text">AssociationsManager</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#spinlock_t_线程安全"><span class="nav-number">1.5.1.</span> <span class="nav-text">spinlock_t 线程安全</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AssociationsHashMap_内部存储"><span class="nav-number">1.5.2.</span> <span class="nav-text">AssociationsHashMap 内部存储</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ObjectAssociationMap"><span class="nav-number">1.5.3.</span> <span class="nav-text">ObjectAssociationMap</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ObjcAssociation"><span class="nav-number">1.5.4.</span> <span class="nav-text">ObjcAssociation</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">1.6.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

@@ -231,6 +231,172 @@
             
               
                 
+                <a class="post-title-link" href="/2016/04/20/OCRuntime-Associate/" itemprop="url">
+                  Objective-C Runtime源码解析之Associate
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2016-04-20T00:18:33+08:00" content="2016-04-20">
+              2016-04-20
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Objective-C/" itemprop="url" rel="index">
+                    <span itemprop="name">Objective-C</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/04/20/OCRuntime-Associate/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/20/OCRuntime-Associate/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h2 id="Objective-C_Runtime源码解析之Associate">Objective-C Runtime源码解析之Associate</h2><h3 id="方法简介">方法简介</h3><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">objc_setAssociatedObject</span>(<span class="params">id <span class="keyword">object</span>, <span class="keyword">const</span> <span class="keyword">void</span> *key, id <span class="keyword">value</span>, objc_AssociationPolicy policy</span>)</span></span><br></pre></td></tr></table></figure>
+<p>功能： 为一个对象以key-value的形式关联一个对象</p>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">id</span> objc_getAssociatedObject(<span class="keyword">id</span> object, <span class="keyword">const</span> <span class="keyword">void</span> *key)</span><br></pre></td></tr></table></figure>
+<p>功能：以key-value的形式从一个对象中获取一个关联的对象</p>
+<h3 id="应用场景">应用场景</h3><p>这两个运行时方法，一般在日常开发中还是经常会用到。</p>
+<p>主要是向一个已经regist的类以k-v的形式关联值，达到property的作用。</p>
+<p>比如通过associate在category中加‘存储属性’</p>
+<p><strong>这篇博客就不具体介绍使用场景了，主要还是看看associate机制的内部实现原理。</strong></p>
+<h3 id="深入源码">深入源码</h3><p>不管是setAssociatedObject还是getAssociatedObject，都有2个版本，以get为例，一个是非gc的</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">id <span class="title">objc_getAssociatedObject_non_gc</span>(<span class="params">id <span class="keyword">object</span>, <span class="keyword">const</span> <span class="keyword">void</span> *key</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>而另一个是gc的</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">objc_getAssociatedObject_gc(id <span class="keyword">object</span>, <span class="keyword">const</span> <span class="keyword">void</span> *key);</span><br></pre></td></tr></table></figure>
+<p>作为iOS日常开发，接触的自然是非gc，那么看看non_gc版本的底层实现。</p>
+<p>内部调用了私有方法</p>
+<figure class="highlight ceylon"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">_</span><span class="keyword">object</span><span class="number">_</span>set<span class="number">_</span>associative<span class="number">_</span>reference(<span class="keyword">object</span>, (<span class="keyword">void</span> *)key, <span class="keyword">value</span>, policy)</span><br></pre></td></tr></table></figure>
+<p>查看该方法，可得出整个过程是：</p>
+<h4 id="objc_getAssociatedObject过程">objc_getAssociatedObject过程</h4><ol>
+<li>调用objc_getAssociatedObject_non_gc</li>
+<li>调用_object_get_associative_reference</li>
+<li>以组合对象object的地址取反作为key，取出包含了该对象所有关联值的map</li>
+<li>以传入的key作为key，取出map中的值，是一个关联值与policy的包装类</li>
+<li>根据associate的策略，对取出的包装类中的value send对应的内存管理msg: retain/autorelease</li>
+<li>返回value</li>
+</ol>
+<h4 id="objc_setAssociatedObject过程">objc_setAssociatedObject过程</h4><ol>
+<li>调用objc_setAssociatedObject_non_gc</li>
+<li>调用_object_set_associative_reference</li>
+<li>以组合对象object的地址取反作为key，取出包含了该对象所有关联值的map, 如果没有则创建一个</li>
+<li>创建ObjcAssociation包装value与policy，以传入的key作为key，set ObjcAssociation到map中</li>
+<li>根据associate的策略，对取出的value发送对应的内存管理消息retain/autorelease</li>
+<li>其中 在第2部后，如果value是空，则是查找到map后，取出老的value，删除对应的key与value，并根据policy release老的value</li>
+</ol>
+<h3 id="详解其中用到的类">详解其中用到的类</h3><h3 id="AssociationsManager">AssociationsManager</h3><p>associate主要依靠于<strong>AssociationsManager</strong>的类来管理。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> AssociationsManager &#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">spinlock_t</span> _lock;</span><br><span class="line">    <span class="keyword">static</span> AssociationsHashMap *_map;               <span class="comment">// associative references:  object pointer -&gt; PtrPtrHashMap.</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    AssociationsManager()   &#123; spinlock_lock(&amp;_lock); &#125;</span><br><span class="line">    ~AssociationsManager()  &#123; spinlock_unlock(&amp;_lock); &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function">AssociationsHashMap &amp;<span class="title">associations</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (_map == <span class="literal">NULL</span>)</span><br><span class="line">            _map = <span class="keyword">new</span> AssociationsHashMap();</span><br><span class="line">        <span class="keyword">return</span> *_map;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>简要介绍下这两个静态变量</p>
+<h4 id="spinlock_t_线程安全">spinlock_t 线程安全</h4><p>每次去set或者get关联对象是，都会创建一个AssociationsManager的临时变量，在构造方法中使自旋锁加锁，析构方法中解锁，从而达到线程安全。</p>
+<p>在这个场景由于是自旋锁，所以对性能影响较小。</p>
+<h4 id="AssociationsHashMap_内部存储">AssociationsHashMap 内部存储</h4><p>AssociationsManager中有个懒加载的属性associations，返回了静态变量: <code>AssociationsHashMap</code> _map</p>
+<p>全局有且仅有1个AssociationsHashMap</p>
+<p>AssociationsHashMap是个STL的<code>unordered_map</code>的子类，存储运行时下<code>所有 有关联值的 对象</code>的相关数据</p>
+<p><strong>key</strong>: 被组合对象的<strong>地址取反</strong></p>
+<p><strong>value</strong>: 继承自STL的<code>map</code>的子类<code>ObjectAssociationMap</code></p>
+<h4 id="ObjectAssociationMap">ObjectAssociationMap</h4><p>ObjectAssociationMap存储了<code>某一个具体对象</code>的<code>所有关联值</code></p>
+<p><strong>key</strong>: 上层方法传入的<strong>const void *key</strong></p>
+<p><strong>value</strong>: 一个class <strong>ObjcAssociation</strong> </p>
+<h4 id="ObjcAssociation">ObjcAssociation</h4><p>ObjcAssociation包装了关联值的内存策略_policy， 以及具体的value</p>
+<pre><code><span class="keyword">class</span> ObjcAssociation {
+        <span class="keyword">uintptr_t</span> _policy;
+        id _value;
+    <span class="keyword">public</span>:
+        ObjcAssociation(<span class="keyword">uintptr_t</span> policy, id value) : _policy(policy), _value(value) {}
+        ObjcAssociation() : _policy(<span class="number">0</span>), _value(nil) {}
+
+        <span class="keyword">uintptr_t</span> policy() <span class="keyword">const</span> { <span class="keyword">return</span> _policy; }
+        <span class="function">id <span class="title">value</span><span class="params">()</span> <span class="keyword">const</span> </span>{ <span class="keyword">return</span> _value; }
+
+        <span class="function"><span class="keyword">bool</span> <span class="title">hasValue</span><span class="params">()</span> </span>{ <span class="keyword">return</span> _value != nil; }
+    };
+</code></pre><h3 id="总结">总结</h3><ul>
+<li>Associate是依靠AssociationsManager静态变量来实现</li>
+<li>存放关联值的形式近似可看成是map中套了个map，外层map映射了 有关联值 的对象，内层map映射了对象中具体的关联值</li>
+<li>Associate是线程安全的</li>
+<li>只看从map取值这个过程来看，时间复杂度大概是O(logN),效率还是挺高的 (ps: map内部是个红黑树，复杂度是O(logN), unordered_map内部是个hash表，时间复杂度可认为是O(1))</li>
+</ul>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/03/23/深入Swift/" itemprop="url">
                   深入Swift
                 </a>
@@ -360,6 +526,565 @@
 
 
     
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/03/23/SwiftPractise/" itemprop="url">
+                  实战后的Swift语言感想
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2016-03-23T00:18:00+08:00" content="2016-03-23">
+              2016-03-23
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Swift/" itemprop="url" rel="index">
+                    <span itemprop="name">Swift</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/03/23/SwiftPractise/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/03/23/SwiftPractise/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h2 id="实战后的Swift语言简单感想">实战后的Swift语言简单感想</h2><p>最近，项目中用Swift重写一整个模块，简单分享下Swift相对于OC上的感受。</p>
+<h2 id="Swift语言">Swift语言</h2><p><em>Swift. A modern programming language that is safe, fast, and interactive.</em></p>
+<p>这是官方的介绍，主要就是<code>安全、快速、交互</code>。<br>实际使用中，和Objective-C对比较大的区别是：</p>
+<h3 id="1-静态语言_&amp;_Strong_type_System">1.静态语言 &amp; Strong type System</h3><p>下文前提: 指的是<code>纯粹</code>的Swift。因为只要你愿意，只要在swift中使用@objc、dynamic或者继承NSObject，还是能获得绝大多数Objective-C的能力。</p>
+<p>Swift没有Objective-C般强大Runtime。函数调用也不再是Objective-C的消息派发，而是直接调用或者vtable。这也是swift运行速度比Objective-C快的一个最主要的原因。不过另一方面 就no more kvo, no more method swizzle， no more isa swizzle。</p>
+<p>另外Swift是个强类型语言，并去掉了id这个比较<code>万能</code>的指针，强调了类型安全。能最大程度的避免unrecognized method。</p>
+<h3 id="2-Powerful_Value_type">2.Powerful Value type</h3><p>Swift在很多场景下，官方更推荐使用value type。与Objective-C不同,系统库中绝大部分包括数组(Array)、字典(Dictionary)、字符串(String)都设计成了Value type。</p>
+<p>因为Value type在绝大部分场景下<code>性能</code>与<code>安全</code>远优于Reference Type的（PS: Swift的Struct值传递是写时拷贝的)</p>
+<p>此外value type比重加大另外一个原因是struct和enum，可以<code>添加方法</code>，可以<code>实现协议</code>，使得能力异常强大。</p>
+<h3 id="3-Protocol-Oriented_Programming">3.Protocol-Oriented Programming</h3><p>面向协议编程是去年苹果在WWDC的同名Session中提出的，配合<code>generics(范型)</code>，非常有趣 简而言之:</p>
+<ul>
+<li>Protocols &gt; Superclasses</li>
+<li>Protocol extensions = magic (almost)</li>
+</ul>
+<p>具体可直接看苹果在Swift系统库中对Protocol优雅的使用。</p>
+<p>比如最基本Int类型(是个struct)，就由SignedIntegerType、 Comparable、Equatable、RandomAccessIndexType、Hashable、CustomStringConvertible、SignedNumberType、BitwiseOperationsType、_Reflectable等一些列协议组成。</p>
+<p>不过不是说啥地方都一股脑用协议，苹果有句话很好：<em>Don’t fight the system</em> 在很多系统要求class的地方还是得class，特别是和Cocoa Touch打交道的时候，深有感触。</p>
+<p>PS: protocol extensions: 可以给已经存在的protocol增加新的方法并提供默认实现</p>
+<h3 id="4-Modern_language">4.Modern language</h3><p>其实也就是吸收了很多现代语言语言的优点，对比Objective-C，实际编码中主要的印象深刻以及有用的是</p>
+<ul>
+<li>末尾不用加分号</li>
+<li>方法调用不用[]</li>
+<li>定义变量直接用let、var就ok了</li>
+<li>闭包语法更加简洁,对比Objective-C的block</li>
+<li>swich可以匹配int之外的数据结构</li>
+<li>enum的raw value可以是int外的结构了，enum还能携带其他的值</li>
+<li>操作符重载，generics(范型)等等</li>
+<li>map、reduce、flatmap、filter等高阶函数，真的爽，爽出声</li>
+<li>配合类型推倒，让你感觉Swift是一门<code>简洁</code>的语言,简了又简</li>
+</ul>
+<p>举例：对一个数组names进行排序</p>
+<p>原版：</p>
+<pre><code><span class="label">func</span> <span class="keyword">backwards(s1: </span><span class="keyword">String, </span>_ <span class="literal">s2</span>: <span class="keyword">String) </span>-&gt; <span class="keyword">Bool </span>{
+    return <span class="literal">s1</span> &gt; <span class="literal">s2</span>
+}
+<span class="label">var</span> <span class="keyword">reversed </span>= names.sort(<span class="keyword">backwards)</span>
+</code></pre><p>超级简洁版：</p>
+<pre><code>reversed = names.sort{ <span class="variable">$0</span> &gt; <span class="variable">$1</span> }
+</code></pre><p>简洁威力加强版：</p>
+<pre><code>reversed = names.<span class="function"><span class="title">sort</span><span class="params">(&gt;)</span></span>
+</code></pre><h3 id="5-安全">5.安全</h3><p>Swift中处处都能透露出安全的气息。除了之前说的几点使安全提升外，比较重要的就是<code>optional value</code>: 对于变量，可以表示出<code>有值</code>与<code>没值</code>两个状态。（ps:内部实现其实就是个范型的enum, 有None和Some两种类型）。</p>
+<p>取值时，必须<code>先解包</code>才能取值，这个过程就会使开发者每次调用变量时必定会去注意变量的nil情况，从而减少bug。</p>
+<p>对于解包，个人认为，优秀的Swift代码应当尽可能多使用可失败的解包(if let、 as?)而不是隐式解包(! 解包失败会直接crash)。</p>
+<p>此外Swift还去掉了指针等一大堆不安全的部分(当然还是提供了一套unsafe开头的api能间接操控)。</p>
+<hr>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/01/04/SwiftExtension中的方法派发/" itemprop="url">
+                  Swift Protocol Extension中的方法派发
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2016-01-04T00:06:45+08:00" content="2016-01-04">
+              2016-01-04
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Swift/" itemprop="url" rel="index">
+                    <span itemprop="name">Swift</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/01/04/SwiftExtension中的方法派发/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/01/04/SwiftExtension中的方法派发/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h3 id="Swift_Protocol_Extension中的方法派发">Swift Protocol Extension中的方法派发</h3><h4 id="最近在玩Swift，总体挺有趣，但偶尔会碰到坑，基本都是静态类型的特性导致的。其中在Protocol的Extension中突遇大坑。">最近在玩Swift，总体挺有趣，但偶尔会碰到坑，基本都是静态类型的特性导致的。其中在Protocol的Extension中突遇大坑。</h4><h5 id="简要介绍下Protocol_Extension">简要介绍下Protocol Extension</h5><p> <em>Swift 2.0后新推出的特性，可以给已有的协议增加方法以及非存储型的实例变量，<strong>并拥有方法实现</strong></em>。</p>
+<p>Protocol Extension作为面向协议编程中极为重要的一个工具，日常中经常会用到，且确实如苹果所说，简直就是magic。</p>
+<p>对于我个人而言，Swift的extension或者OC的category，经常会用来践行单一职责的设计思想。</p>
+<h5 id="很日常的场景与问题">很日常的场景与问题</h5><p>协议扩展里有方法A，实现了协议的class或struct中也有A方法，并拥有自己的实现。然后用协议类型的变量指向那些class的实例，并调用A方法</p>
+<p>然后这边出现的一个巨大问题： 用extension给Potocol增加的方法，没有“多态性”！<del>这里可能不能叫动态，毕竟协议不算是子类，但大致就是这个意思</del></p>
+<h5 id="举个栗子">举个栗子</h5><p>定义一个基础的协议People：</p>
+<pre><code>protocol People {
+    <span class="variable"><span class="keyword">var</span> name</span>: String { <span class="keyword">get</span> }
+    <span class="variable"><span class="keyword">var</span> age</span>: <span class="typename">Int</span> { <span class="keyword">get</span> }
+<span class="comment">//    var hobbies: [String] { get }</span>
+}
+</code></pre><p>通过extension给People增加成员变量Hobby</p>
+<pre><code><span class="comment">// MARK: - Hobby</span>
+<span class="class"><span class="keyword">extension</span> <span class="title">People</span> </span>{
+    <span class="keyword">var</span> hobbies: [<span class="type">String</span>] {
+        <span class="built_in">print</span>(<span class="string">"Base Protocol extension hobbies"</span>)
+        <span class="keyword">return</span> []
+    }
+}
+</code></pre><p>定义2个实现了协议的类，其中Archer的hobby方法通过extension增加，为了增加栗子的case</p>
+<pre><code><span class="class"><span class="keyword">class</span> <span class="title">Archer</span>: <span class="typename">People {</span></span>
+    <span class="variable"><span class="keyword">var</span> name</span> = <span class="string">"Emiya"</span>
+    <span class="variable"><span class="keyword">var</span> age</span> = <span class="number">18</span> <span class="comment">// 瞎写的</span>
+}
+
+<span class="comment">// MARK: - Hobby of Archer</span>
+extension Archer {
+    <span class="variable"><span class="keyword">var</span> hobbies</span> : [String] {
+        print(<span class="string">"Archer class's extension hobby"</span>)
+        <span class="keyword">return</span> [<span class="string">"Shoot"</span>, <span class="string">"Rin"</span>]
+    }
+}
+
+<span class="class"><span class="keyword">class</span> <span class="title">Saber</span>: <span class="typename">People {</span></span>
+    <span class="variable"><span class="keyword">var</span> name</span> = <span class="string">"Altria"</span>
+    <span class="variable"><span class="keyword">var</span> age</span> = <span class="number">100000</span> <span class="comment">// 瞎写的</span>
+    <span class="variable"><span class="keyword">var</span> hobbies</span>: [String] {
+        <span class="keyword">get</span> {
+            print(<span class="string">"Saber class's origin hobby"</span>)
+            <span class="keyword">return</span> [<span class="string">"Eat"</span>,<span class="string">"Lion"</span>]
+        }
+    }
+}
+</code></pre><p>尝试调用</p>
+<pre><code><span class="tag">var</span> aPeople: People
+<span class="tag">var</span> archer = <span class="function"><span class="title">Archer</span><span class="params">()</span></span>
+<span class="tag">var</span> saber = <span class="function"><span class="title">Saber</span><span class="params">()</span></span>
+
+aPeople = archer <span class="comment">// 推断为People的变量指向archer</span>
+
+
+archer<span class="class">.hobbies</span> <span class="comment">//  ["Shoot", "Rin"]</span>
+saber<span class="class">.hobbies</span> <span class="comment">// ["Eat", "Lion"]</span>
+aPeople<span class="class">.hobbies</span> <span class="comment">//!意料之外 []</span>
+
+aPeople = saber
+aPeople<span class="class">.hobbies</span> <span class="comment">//!意料之外 []</span>
+</code></pre><p>原本预想aPeople.hobbies会调用运行时实际类型的方法，然而却调用了协议的extension的默认实现</p>
+<p>尝试在协议中增加hobby变量，（去掉注释</p>
+<pre><code>protocol People {
+        <span class="variable"><span class="keyword">var</span> name</span>: String { <span class="keyword">get</span> }
+        <span class="variable"><span class="keyword">var</span> age</span>: <span class="typename">Int</span> { <span class="keyword">get</span> }
+        <span class="variable"><span class="keyword">var</span> hobbies</span>: [String] { <span class="keyword">get</span> }
+}
+</code></pre><p>调用结果</p>
+<pre><code><span class="tag">var</span> aPeople: People
+<span class="tag">var</span> archer = <span class="function"><span class="title">Archer</span><span class="params">()</span></span>
+<span class="tag">var</span> saber = <span class="function"><span class="title">Saber</span><span class="params">()</span></span>
+
+aPeople = archer <span class="comment">// 类型为People的变量指向archer</span>
+
+
+archer<span class="class">.hobbies</span> <span class="comment">//  ["Shoot", "Rin"]</span>
+saber<span class="class">.hobbies</span> <span class="comment">// ["Eat", "Lion"]</span>
+aPeople<span class="class">.hobbies</span> <span class="comment">//!!["Shoot", "Rin"]</span>
+
+aPeople = saber
+aPeople<span class="class">.hobbies</span> <span class="comment">//!! ["Eat", "Lion"]</span>
+</code></pre><p>“正确”的调用了真正类型的方法</p>
+<h4 id="结论">结论</h4><p>对于调用某实例的A方法时</p>
+<p>if A是通过Protocol Extension增加的 &amp;&amp; 协议本身没声明A &amp;&amp; 当前实例的编译器推断类型是Protocol</p>
+<ul>
+<li>则调用Protocol的Extension中的该方法的实现。</li>
+</ul>
+<p>else</p>
+<ul>
+<li>调用运行时该实例真正的Type的对应的方法</li>
+</ul>
+<p><em>Swift目前这个版本是这样的，不知是苹果的有意为之还是只是一个Bug</em></p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2015/12/31/2015就要结束了/" itemprop="url">
+                  2015，Good bye
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-12-31T23:49:20+08:00" content="2015-12-31">
+              2015-12-31
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/日常/" itemprop="url" rel="index">
+                    <span itemprop="name">日常</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2015/12/31/2015就要结束了/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/12/31/2015就要结束了/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>2015就这么结束了，回望这一年，过的还是挺开心并充满收获的。</p>
+<h4 id="技术上">技术上</h4><p>从春招前到实习入职前，从实习入职到秋招(转正面试)前，从秋招到现在，每次从某个时间段的终点回望该时间段起点，总是能感受到自己提升了很多，包括技术、视野、思想等。年底搭了个博客，想着写点技术分享，可惜啥都没写（笑。</p>
+<h4 id="生活上">生活上</h4><p>感觉在阿里实习的挺开心，遇见了有趣的人们，有趣的团队，有趣的生活。并充分融入了这里。</p>
+<h4 id="展望2016">展望2016</h4><p>新的一年，技术上还是打算往全栈发展，说到底，语言只是一个工具，iOS终究也只是个方向而已，总是局限在这一块，只会限制自己的视野而已，iOS、安卓、服务端、前端、机器学习等等都有一定学习，可能是更好的方向。</p>
+<p>展望2016，把毕设做了，和大学室友们好好旅行一波，毕业和入职，又是人生的新阶段了。</p>
+<p>Hello 2016,Stay hungry,stay foolish.</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2015/11/15/personalBlog/" itemprop="url">
+                  个人博客搭建完成，hello world
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-11-15T22:59:43+08:00" content="2015-11-15">
+              2015-11-15
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/日常/" itemprop="url" rel="index">
+                    <span itemprop="name">日常</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2015/11/15/personalBlog/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/11/15/personalBlog/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>之前一直想搞个自己的博客，好方便学习<del>与装逼</del>，时隔多年，终于今日搭建工程初步complete。Github Pages + Hexo + next theme + domain，真是大幅度降低了搭建个人博客的门槛 ：）</p>
+<p>简要介绍下博主，大四狗、iOS Developer、阿里巴巴实习中、手淘客户端开发、实力菜的不行。</p>
+<h3 id="未来会写些什么">未来会写些什么</h3><ul>
+<li>iOS开发相关 </li>
+<li>设计模式之类<del>啥都不懂</del> </li>
+<li>一些书籍的读后感</li>
+<li>ACG相关吐槽？最近压根就不怎么看动漫：x</li>
+<li>日常</li>
+<li>当然，最大的可能是再也没更新了（笑</li>
+</ul>
+<p>希望对技术的热爱<del>大雾</del>以及博客的搭建会使自己坚持学习并分享。不说了，忙碌的开发<del>搬砖</del>生活又要开始了。</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
 
   </section>
 
@@ -402,21 +1127,21 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">5</span>
+              <span class="site-state-item-count">6</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
 
           <div class="site-state-item site-state-categories">
             <a href="/categories">
-              <span class="site-state-item-count">2</span>
+              <span class="site-state-item-count">3</span>
               <span class="site-state-item-name">分类</span>
               </a>
           </div>
 
           <div class="site-state-item site-state-tags">
             <a href="/tags">
-              <span class="site-state-item-count">3</span>
+              <span class="site-state-item-count">5</span>
               <span class="site-state-item-name">标签</span>
               </a>
           </div>
