@@ -63,7 +63,7 @@
 <meta property="og:description" content="Objective-C Runtime源码解析之Associate方法简介1void objc_setAssociatedObject(id object, const void *key, id value, objc_AssociationPolicy policy)
 功能： 为一个对象以key-value的形式关联一个对象
 1id objc_getAssociatedObject(id ob">
-<meta property="og:updated_time" content="2016-04-19T16:21:21.000Z">
+<meta property="og:updated_time" content="2016-06-19T12:56:45.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Objective-C Runtime源码解析之Associate">
 <meta name="twitter:description" content="Objective-C Runtime源码解析之Associate方法简介1void objc_setAssociatedObject(id object, const void *key, id value, objc_AssociationPolicy policy)
@@ -334,7 +334,7 @@
         <span class="function"><span class="keyword">bool</span> <span class="title">hasValue</span><span class="params">()</span> </span>{ <span class="keyword">return</span> _value != nil; }
     };
 </code></pre><h3 id="总结">总结</h3><ul>
-<li>Associate是依靠AssociationsManager静态变量来实现</li>
+<li>Associate是依靠AssociationsManager来管理实现，其中有个静态全局的map</li>
 <li>存放关联值的形式近似可看成是map中套了个map，外层map映射了 有关联值 的对象，内层map映射了对象中具体的关联值</li>
 <li>Associate是线程安全的</li>
 <li>只看从map取值这个过程来看，时间复杂度大概是O(logN),效率还是挺高的 (ps: map内部是个红黑树，复杂度是O(logN), unordered_map内部是个hash表，时间复杂度可认为是O(1))</li>
@@ -457,7 +457,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">6</span>
+              <span class="site-state-item-count">5</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
