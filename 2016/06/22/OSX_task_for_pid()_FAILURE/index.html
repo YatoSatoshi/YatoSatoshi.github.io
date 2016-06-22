@@ -37,7 +37,7 @@
 <link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Swift,iOS,Sentiment" />
+  <meta name="keywords" content="Mac，Mach，task_for_pid，KERN_FAILURE，El Capitan" />
 
 
 
@@ -53,25 +53,22 @@
 
 
 
-<meta name="description" content="实战后的Swift语言简单感想最近，项目中用Swift重写一整个模块，简单分享下Swift相对于OC上的感受。
-Swift语言Swift. A modern programming language that is safe, fast, and interactive.
-这是官方的介绍，主要就是安全、快速、交互。实际使用中，和Objective-C对比较大的区别是：
-1.静态语言 &amp;amp; S">
+<meta name="description" content="task_for_pid()调用失败刚刚写代码中想用task_for_pid()这个Mach陷阱来返回任务id，但是结果总是KERN_FAILURE(5)。
+自己排查了一番，发现是OSX(macOS) ElCapitan之后加入的System Integrity Protection特性有关，也就是rootless。
+什么是System Integrity ProtectionSIP是El Cap">
 <meta property="og:type" content="article">
-<meta property="og:title" content="实战后的Swift语言感想">
-<meta property="og:url" content="http://blog.SatoshiChin.com/2016/03/23/SwiftPractise/index.html">
+<meta property="og:title" content="OSX ElCapitan之后task_for_pid() MACH陷阱调用结果KERN_FAILURE原因与解决方案">
+<meta property="og:url" content="http://blog.SatoshiChin.com/2016/06/22/OSX_task_for_pid()_FAILURE/index.html">
 <meta property="og:site_name" content="SatoshiChin's blog">
-<meta property="og:description" content="实战后的Swift语言简单感想最近，项目中用Swift重写一整个模块，简单分享下Swift相对于OC上的感受。
-Swift语言Swift. A modern programming language that is safe, fast, and interactive.
-这是官方的介绍，主要就是安全、快速、交互。实际使用中，和Objective-C对比较大的区别是：
-1.静态语言 &amp;amp; S">
-<meta property="og:updated_time" content="2016-03-22T16:18:39.000Z">
+<meta property="og:description" content="task_for_pid()调用失败刚刚写代码中想用task_for_pid()这个Mach陷阱来返回任务id，但是结果总是KERN_FAILURE(5)。
+自己排查了一番，发现是OSX(macOS) ElCapitan之后加入的System Integrity Protection特性有关，也就是rootless。
+什么是System Integrity ProtectionSIP是El Cap">
+<meta property="og:updated_time" content="2016-06-22T13:00:59.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="实战后的Swift语言感想">
-<meta name="twitter:description" content="实战后的Swift语言简单感想最近，项目中用Swift重写一整个模块，简单分享下Swift相对于OC上的感受。
-Swift语言Swift. A modern programming language that is safe, fast, and interactive.
-这是官方的介绍，主要就是安全、快速、交互。实际使用中，和Objective-C对比较大的区别是：
-1.静态语言 &amp;amp; S">
+<meta name="twitter:title" content="OSX ElCapitan之后task_for_pid() MACH陷阱调用结果KERN_FAILURE原因与解决方案">
+<meta name="twitter:description" content="task_for_pid()调用失败刚刚写代码中想用task_for_pid()这个Mach陷阱来返回任务id，但是结果总是KERN_FAILURE(5)。
+自己排查了一番，发现是OSX(macOS) ElCapitan之后加入的System Integrity Protection特性有关，也就是rootless。
+什么是System Integrity ProtectionSIP是El Cap">
 
 
 
@@ -83,7 +80,7 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
   };
 </script>
 
-  <title> 实战后的Swift语言感想 | SatoshiChin's blog </title>
+  <title> OSX ElCapitan之后task_for_pid() MACH陷阱调用结果KERN_FAILURE原因与解决方案 | SatoshiChin's blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -223,7 +220,7 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
             
             
               
-                实战后的Swift语言感想
+                OSX ElCapitan之后task_for_pid() MACH陷阱调用结果KERN_FAILURE原因与解决方案
               
             
           </h1>
@@ -232,8 +229,8 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2016-03-23T00:18:00+08:00" content="2016-03-23">
-              2016-03-23
+            <time itemprop="dateCreated" datetime="2016-06-22T20:52:20+08:00" content="2016-06-22">
+              2016-06-22
             </time>
           </span>
 
@@ -242,8 +239,20 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/Swift/" itemprop="url" rel="index">
-                    <span itemprop="name">Swift</span>
+                  <a href="/categories/Mac/" itemprop="url" rel="index">
+                    <span itemprop="name">Mac</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Mac/Mach/" itemprop="url" rel="index">
+                    <span itemprop="name">Mach</span>
                   </a>
                 </span>
 
@@ -258,8 +267,8 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/03/23/SwiftPractise/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/03/23/SwiftPractise/" itemprop="commentsCount"></span>
+                <a href="/2016/06/22/OSX_task_for_pid()_FAILURE/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/22/OSX_task_for_pid()_FAILURE/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -278,51 +287,18 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
       
 
       
-        <span itemprop="articleBody"><h2 id="实战后的Swift语言简单感想">实战后的Swift语言简单感想</h2><p>最近，项目中用Swift重写一整个模块，简单分享下Swift相对于OC上的感受。</p>
-<h2 id="Swift语言">Swift语言</h2><p><em>Swift. A modern programming language that is safe, fast, and interactive.</em></p>
-<p>这是官方的介绍，主要就是<code>安全、快速、交互</code>。<br>实际使用中，和Objective-C对比较大的区别是：</p>
-<h3 id="1-静态语言_&amp;_Strong_type_System">1.静态语言 &amp; Strong type System</h3><p>下文前提: 指的是<code>纯粹</code>的Swift。因为只要你愿意，只要在swift中使用@objc、dynamic或者继承NSObject，还是能获得绝大多数Objective-C的能力。</p>
-<p>Swift没有Objective-C般强大Runtime。函数调用也不再是Objective-C的消息派发，而是直接调用或者vtable。这也是swift运行速度比Objective-C快的一个最主要的原因。不过另一方面 就no more kvo, no more method swizzle， no more isa swizzle。</p>
-<p>另外Swift是个强类型语言，并去掉了id这个比较<code>万能</code>的指针，强调了类型安全。能最大程度的避免unrecognized method。</p>
-<h3 id="2-Powerful_Value_type">2.Powerful Value type</h3><p>Swift在很多场景下，官方更推荐使用value type。与Objective-C不同,系统库中绝大部分包括数组(Array)、字典(Dictionary)、字符串(String)都设计成了Value type。</p>
-<p>因为Value type在绝大部分场景下<code>性能</code>与<code>安全</code>远优于Reference Type的（PS: Swift的Struct值传递是写时拷贝的)</p>
-<p>此外value type比重加大另外一个原因是struct和enum，可以<code>添加方法</code>，可以<code>实现协议</code>，使得能力异常强大。</p>
-<h3 id="3-Protocol-Oriented_Programming">3.Protocol-Oriented Programming</h3><p>面向协议编程是去年苹果在WWDC的同名Session中提出的，配合<code>generics(范型)</code>，非常有趣 简而言之:</p>
-<ul>
-<li>Protocols &gt; Superclasses</li>
-<li>Protocol extensions = magic (almost)</li>
-</ul>
-<p>具体可直接看苹果在Swift系统库中对Protocol优雅的使用。</p>
-<p>比如最基本Int类型(是个struct)，就由SignedIntegerType、 Comparable、Equatable、RandomAccessIndexType、Hashable、CustomStringConvertible、SignedNumberType、BitwiseOperationsType、_Reflectable等一些列协议组成。</p>
-<p>不过不是说啥地方都一股脑用协议，苹果有句话很好：<em>Don’t fight the system</em> 在很多系统要求class的地方还是得class，特别是和Cocoa Touch打交道的时候，深有感触。</p>
-<p>PS: protocol extensions: 可以给已经存在的protocol增加新的方法并提供默认实现</p>
-<h3 id="4-Modern_language">4.Modern language</h3><p>其实也就是吸收了很多现代语言语言的优点，对比Objective-C，实际编码中主要的印象深刻以及有用的是</p>
-<ul>
-<li>末尾不用加分号</li>
-<li>方法调用不用[]</li>
-<li>定义变量直接用let、var就ok了</li>
-<li>闭包语法更加简洁,对比Objective-C的block</li>
-<li>swich可以匹配int之外的数据结构</li>
-<li>enum的raw value可以是int外的结构了，enum还能携带其他的值</li>
-<li>操作符重载，generics(范型)等等</li>
-<li>map、reduce、flatmap、filter等高阶函数，真的爽，爽出声</li>
-<li>配合类型推倒，让你感觉Swift是一门<code>简洁</code>的语言,简了又简</li>
-</ul>
-<p>举例：对一个数组names进行排序</p>
-<p>原版：</p>
-<pre><code><span class="label">func</span> <span class="keyword">backwards(s1: </span><span class="keyword">String, </span>_ <span class="literal">s2</span>: <span class="keyword">String) </span>-&gt; <span class="keyword">Bool </span>{
-    return <span class="literal">s1</span> &gt; <span class="literal">s2</span>
-}
-<span class="label">var</span> <span class="keyword">reversed </span>= names.sort(<span class="keyword">backwards)</span>
-</code></pre><p>超级简洁版：</p>
-<pre><code>reversed = names.sort{ <span class="variable">$0</span> &gt; <span class="variable">$1</span> }
-</code></pre><p>简洁威力加强版：</p>
-<pre><code>reversed = names.<span class="function"><span class="title">sort</span><span class="params">(&gt;)</span></span>
-</code></pre><h3 id="5-安全">5.安全</h3><p>Swift中处处都能透露出安全的气息。除了之前说的几点使安全提升外，比较重要的就是<code>optional value</code>: 对于变量，可以表示出<code>有值</code>与<code>没值</code>两个状态。（ps:内部实现其实就是个范型的enum, 有None和Some两种类型）。</p>
-<p>取值时，必须<code>先解包</code>才能取值，这个过程就会使开发者每次调用变量时必定会去注意变量的nil情况，从而减少bug。</p>
-<p>对于解包，个人认为，优秀的Swift代码应当尽可能多使用可失败的解包(if let、 as?)而不是隐式解包(! 解包失败会直接crash)。</p>
-<p>此外Swift还去掉了指针等一大堆不安全的部分(当然还是提供了一套unsafe开头的api能间接操控)。</p>
-<hr>
+        <span itemprop="articleBody"><h4 id="task_for_pid()调用失败">task_for_pid()调用失败</h4><p>刚刚写代码中想用task_for_pid()这个Mach陷阱来返回任务id，但是结果总是<code>KERN_FAILURE(5)</code>。</p>
+<p>自己排查了一番，发现是OSX(macOS) ElCapitan之后加入的<code>System Integrity Protection</code>特性有关，也就是<code>rootless</code>。</p>
+<h4 id="什么是System_Integrity_Protection">什么是System Integrity Protection</h4><p>SIP是El Capitan中引入的一项安全特性。它能保护一些系统进程，文件，文件夹。即使其他进程以root权限（加sudo）来修改上述的东西，都会失败。</p>
+<p>由此可见，我们自己代码下的很多进程相关的系统调用或者Mach陷阱都会失败。</p>
+<h4 id="怎么关闭System_Integrity_Protection">怎么关闭System Integrity Protection</h4><p>这项技术本身能非常好的保护mac，但有些时候实在需要关闭一下，那么只要：</p>
+<p><code>重启</code>mac，按下<code>command + R</code>键进入<code>Recovery模式</code></p>
+<p>进入之后点击上面bar中的<code>工具(Utilities)</code>,选择<code>终端(Terminal)</code></p>
+<p>然后在终端中输入</p>
+<pre><code>csrutil <span class="built_in">disable</span>
+</code></pre><p>重启mac，SIP就关闭了，接下去就可以肆无忌惮了。</p>
+<p>如果想恢复，直接在终端中输入csrutil enable就行。</p>
+<h4 id="结果">结果</h4><p>重启之后，task_for_pid成功返回了pid对应的task id : )</p>
 </span>
       
     </div>
@@ -331,9 +307,9 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
       
         <div class="post-tags">
           
-            <a href="/tags/Swift/" rel="tag">#Swift</a>
+            <a href="/tags/Mac/" rel="tag">#Mac</a>
           
-            <a href="/tags/iOS/" rel="tag">#iOS</a>
+            <a href="/tags/Mach/" rel="tag">#Mach</a>
           
         </div>
       
@@ -342,17 +318,13 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/01/04/SwiftExtension中的方法派发/" rel="next" title="Swift Protocol Extension中的方法派发">
-                <i class="fa fa-chevron-left"></i> Swift Protocol Extension中的方法派发
+              <a href="/2016/04/20/OCRuntime-Associate/" rel="next" title="Objective-C Runtime源码解析之Associate">
+                <i class="fa fa-chevron-left"></i> Objective-C Runtime源码解析之Associate
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/03/23/深入Swift/" rel="prev" title="深入Swift">
-                深入Swift <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -367,10 +339,10 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
 
     <div class="post-spread">
       
-        <div class="ds-share flat" data-thread-key="2016/03/23/SwiftPractise/"
-     data-title="实战后的Swift语言感想"
+        <div class="ds-share flat" data-thread-key="2016/06/22/OSX_task_for_pid()_FAILURE/"
+     data-title="OSX ElCapitan之后task_for_pid() MACH陷阱调用结果KERN_FAILURE原因与解决方案"
      data-content=""
-     data-url="http://blog.SatoshiChin.com/2016/03/23/SwiftPractise/">
+     data-url="http://blog.SatoshiChin.com/2016/06/22/OSX_task_for_pid()_FAILURE/">
   <div class="ds-share-inline">
     <ul  class="ds-share-icons-16">
 
@@ -398,8 +370,8 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
         
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/03/23/SwiftPractise/"
-           data-title="实战后的Swift语言感想" data-url="http://blog.SatoshiChin.com/2016/03/23/SwiftPractise/">
+      <div class="ds-thread" data-thread-key="2016/06/22/OSX_task_for_pid()_FAILURE/"
+           data-title="OSX ElCapitan之后task_for_pid() MACH陷阱调用结果KERN_FAILURE原因与解决方案" data-url="http://blog.SatoshiChin.com/2016/06/22/OSX_task_for_pid()_FAILURE/">
       </div>
     
   </div>
@@ -499,7 +471,7 @@ Swift语言Swift. A modern programming language that is safe, fast, and interact
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#实战后的Swift语言简单感想"><span class="nav-number">1.</span> <span class="nav-text">实战后的Swift语言简单感想</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Swift语言"><span class="nav-number">2.</span> <span class="nav-text">Swift语言</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-静态语言_&_Strong_type_System"><span class="nav-number">2.1.</span> <span class="nav-text">1.静态语言 & Strong type System</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Powerful_Value_type"><span class="nav-number">2.2.</span> <span class="nav-text">2.Powerful Value type</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Protocol-Oriented_Programming"><span class="nav-number">2.3.</span> <span class="nav-text">3.Protocol-Oriented Programming</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Modern_language"><span class="nav-number">2.4.</span> <span class="nav-text">4.Modern language</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-安全"><span class="nav-number">2.5.</span> <span class="nav-text">5.安全</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#task_for_pid()调用失败"><span class="nav-number">1.</span> <span class="nav-text">task_for_pid()调用失败</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#什么是System_Integrity_Protection"><span class="nav-number">2.</span> <span class="nav-text">什么是System Integrity Protection</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#怎么关闭System_Integrity_Protection"><span class="nav-number">3.</span> <span class="nav-text">怎么关闭System Integrity Protection</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#结果"><span class="nav-number">4.</span> <span class="nav-text">结果</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

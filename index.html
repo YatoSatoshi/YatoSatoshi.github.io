@@ -222,6 +222,132 @@
             
               
                 
+                <a class="post-title-link" href="/2016/06/22/OSX_task_for_pid()_FAILURE/" itemprop="url">
+                  OSX ElCapitan之后task_for_pid() MACH陷阱调用结果KERN_FAILURE原因与解决方案
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2016-06-22T20:52:20+08:00" content="2016-06-22">
+              2016-06-22
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Mac/" itemprop="url" rel="index">
+                    <span itemprop="name">Mac</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Mac/Mach/" itemprop="url" rel="index">
+                    <span itemprop="name">Mach</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/06/22/OSX_task_for_pid()_FAILURE/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/22/OSX_task_for_pid()_FAILURE/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h4 id="task_for_pid()调用失败">task_for_pid()调用失败</h4><p>刚刚写代码中想用task_for_pid()这个Mach陷阱来返回任务id，但是结果总是<code>KERN_FAILURE(5)</code>。</p>
+<p>自己排查了一番，发现是OSX(macOS) ElCapitan之后加入的<code>System Integrity Protection</code>特性有关，也就是<code>rootless</code>。</p>
+<h4 id="什么是System_Integrity_Protection">什么是System Integrity Protection</h4><p>SIP是El Capitan中引入的一项安全特性。它能保护一些系统进程，文件，文件夹。即使其他进程以root权限（加sudo）来修改上述的东西，都会失败。</p>
+<p>由此可见，我们自己代码下的很多进程相关的系统调用或者Mach陷阱都会失败。</p>
+<h4 id="怎么关闭System_Integrity_Protection">怎么关闭System Integrity Protection</h4><p>这项技术本身能非常好的保护mac，但有些时候实在需要关闭一下，那么只要：</p>
+<p><code>重启</code>mac，按下<code>command + R</code>键进入<code>Recovery模式</code></p>
+<p>进入之后点击上面bar中的<code>工具(Utilities)</code>,选择<code>终端(Terminal)</code></p>
+<p>然后在终端中输入</p>
+<pre><code>csrutil <span class="built_in">disable</span>
+</code></pre><p>重启mac，SIP就关闭了，接下去就可以肆无忌惮了。</p>
+<p>如果想恢复，直接在终端中输入csrutil enable就行。</p>
+<h4 id="结果">结果</h4><p>重启之后，task_for_pid成功返回了pid对应的task id : )</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/04/20/OCRuntime-Associate/" itemprop="url">
                   Objective-C Runtime源码解析之Associate
                 </a>
@@ -1005,21 +1131,21 @@ aPeople<span class="class">.hobbies</span> <span class="comment">//!! ["Eat", "L
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">5</span>
+              <span class="site-state-item-count">6</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
 
           <div class="site-state-item site-state-categories">
             <a href="/categories">
-              <span class="site-state-item-count">3</span>
+              <span class="site-state-item-count">5</span>
               <span class="site-state-item-name">分类</span>
               </a>
           </div>
 
           <div class="site-state-item site-state-tags">
             <a href="/tags">
-              <span class="site-state-item-count">5</span>
+              <span class="site-state-item-count">7</span>
               <span class="site-state-item-name">标签</span>
               </a>
           </div>
