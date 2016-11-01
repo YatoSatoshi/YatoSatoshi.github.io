@@ -1,0 +1,801 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Objective-C,iOS,RunTime,源码解析,objc_msgSend,arm64" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="前言众所周知，Objective-C的方法调用是通过objc_msgSend来进行动态的消息派发，即objc_msgSend是Objective-C活的的灵魂。
+然后该方法苹果是直接用汇编来实现的。下面，以开源的objc4-647版本，大致解析下在arm64上的汇编实现。
+出于阅读效率考虑，我直接以注释的形式来逐行解析汇编内容。
+_objc_msgSend_objc_msgSend消息派发最重要的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Objective-C Runtime汇编源码解析之objc_msgSend(arm64版本)">
+<meta property="og:url" content="http://blog.SatoshiChin.com/2016/11/02/objc_msgsend/index.html">
+<meta property="og:site_name" content="SatoshiChin's blog">
+<meta property="og:description" content="前言众所周知，Objective-C的方法调用是通过objc_msgSend来进行动态的消息派发，即objc_msgSend是Objective-C活的的灵魂。
+然后该方法苹果是直接用汇编来实现的。下面，以开源的objc4-647版本，大致解析下在arm64上的汇编实现。
+出于阅读效率考虑，我直接以注释的形式来逐行解析汇编内容。
+_objc_msgSend_objc_msgSend消息派发最重要的">
+<meta property="og:image" content="http://blog.SatoshiChin.com/uploads/msgsendFlowChart.png">
+<meta property="og:updated_time" content="2016-11-01T18:57:39.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Objective-C Runtime汇编源码解析之objc_msgSend(arm64版本)">
+<meta name="twitter:description" content="前言众所周知，Objective-C的方法调用是通过objc_msgSend来进行动态的消息派发，即objc_msgSend是Objective-C活的的灵魂。
+然后该方法苹果是直接用汇编来实现的。下面，以开源的objc4-647版本，大致解析下在arm64上的汇编实现。
+出于阅读效率考虑，我直接以注释的形式来逐行解析汇编内容。
+_objc_msgSend_objc_msgSend消息派发最重要的">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'post',
+    motion: true
+  };
+</script>
+
+  <title> Objective-C Runtime汇编源码解析之objc_msgSend(arm64版本) | SatoshiChin's blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">SatoshiChin's blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Stay hungry Stay foolish</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Objective-C Runtime汇编源码解析之objc_msgSend(arm64版本)
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2016-11-02T02:43:33+08:00" content="2016-11-02">
+              2016-11-02
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Objective-C/" itemprop="url" rel="index">
+                    <span itemprop="name">Objective-C</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/11/02/objc_msgsend/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/02/objc_msgsend/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="前言">前言</h2><p>众所周知，Objective-C的方法调用是通过<code>objc_msgSend</code>来进行<code>动态的消息派发</code>，即objc_msgSend是Objective-C活的的灵魂。</p>
+<p>然后该方法苹果是直接用汇编来实现的。下面，以开源的objc4-647版本，大致解析下在<code>arm64</code>上的汇编实现。</p>
+<p>出于阅读效率考虑，我直接以注释的形式来逐行解析汇编内容。</p>
+<h2 id="_objc_msgSend">_objc_msgSend</h2><p>_objc_msgSend消息派发最重要的入口，汇编实现如下，</p>
+<p>ps：在最新版本iOS中调试中发现，相比于开源的objc，<strong>在调用过程中，x9和x16存放的内容相比老的开源版本，进行了互换</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>x16</th>
+<th>x9</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最新iOS</td>
+<td>class</td>
+<td>SEL</td>
+</tr>
+<tr>
+<td>objc4-647</td>
+<td>SEL</td>
+<td>class</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 方法调用时，x0寄存器存放了self对象，x1存放了SEL */</span></span><br><span class="line"></span><br><span class="line">ENTRY _objc_msgSend</span><br><span class="line">	MESSENGER_START</span><br><span class="line"></span><br><span class="line">	cmp	x0, <span class="preprocessor">#<span class="number">0</span>			<span class="comment">// nil check and tagged pointer check</span></span></span><br><span class="line">	<span class="comment">/* 寄存器x0的内容与0作比较， 用来判断self是否是nil */</span></span><br><span class="line">	b.le	LNilOrTagged		<span class="comment">//  (MSB tagged pointer looks negative)</span></span><br><span class="line">	<span class="comment">/* 如果结果&lt;=0，即self是nil， 跳到LNilOrTagged*/</span></span><br><span class="line">	ldr	x13, [x0]		<span class="comment">// x13 = isa</span></span><br><span class="line">	<span class="comment">/* 以x0内容(指向类的isa)为地址，取该地址的内存内容放入x13寄存器，即 x13 = isa */</span></span><br><span class="line">	and	x9, x13, <span class="preprocessor">#ISA_MASK	<span class="comment">// x9 = class</span></span></span><br><span class="line">	<span class="comment">/* x9 = x13 按位与 ISA_MASK(isa的掩码) 即x9放入了class */</span>	</span><br><span class="line">LGetIsaDone:</span><br><span class="line">	CacheLookup NORMAL		<span class="comment">// calls imp or objc_msgSend_uncached</span></span><br><span class="line">	<span class="comment">/* 跳转CacheLookup 先查找缓存，失败则直接搜索方法列表 */</span></span><br><span class="line"></span><br><span class="line">LNilOrTagged:</span><br><span class="line">	b.eq	LReturnZero		<span class="comment">// nil check</span></span><br><span class="line">	<span class="comment">/* 如果x0是0，即self是nil，则跳转LReturnZero */</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">// tagged</span></span><br><span class="line">	<span class="comment">/* 否则是tagged pointer的情况 */</span></span><br><span class="line">	adrp	x10, _objc_debug_taggedpointer_classes@PAGE</span><br><span class="line">	<span class="comment">/* 加载tagged pointer类所在的内存页的地址到x10中 */</span></span><br><span class="line">	add	x10, x10, _objc_debug_taggedpointer_classes@PAGEOFF</span><br><span class="line">	<span class="comment">/* x10 = x10 + tagged pointer所在页面内的偏移量  即x10是tagged pointer的类地址 */</span></span><br><span class="line">	ubfx	x11, x0, <span class="preprocessor">#<span class="number">60</span>, #<span class="number">4</span></span></span><br><span class="line">	<span class="comment">/* 提取x0的高4位到x11低四位，并补0扩展成64位 即x11 = (x0 &amp; 0xf000000000000000) &gt;&gt; 60 */</span></span><br><span class="line">	ldr	x9, [x10, x11, LSL <span class="preprocessor">#<span class="number">3</span>]</span></span><br><span class="line">	<span class="comment">/* 以(x10 + (x11 &lt;&lt; 3))值为地址的取内容放入x9中，即x9放入了class */</span></span><br><span class="line">	b	LGetIsaDone</span><br><span class="line">	<span class="comment">/* 无返回的跳转LGetIsaDone */</span></span><br><span class="line">	</span><br><span class="line">LReturnZero:</span><br><span class="line">	<span class="comment">// x0 is already zero</span></span><br><span class="line">	<span class="comment">/* 将x1 d0 d1 d2 d3置为0 并返回 */</span></span><br><span class="line">	mov	x1, <span class="preprocessor">#<span class="number">0</span></span></span><br><span class="line">	movi	d0, <span class="preprocessor">#<span class="number">0</span></span></span><br><span class="line">	movi	d1, <span class="preprocessor">#<span class="number">0</span></span></span><br><span class="line">	movi	d2, <span class="preprocessor">#<span class="number">0</span></span></span><br><span class="line">	movi	d3, <span class="preprocessor">#<span class="number">0</span></span></span><br><span class="line">	MESSENGER_END_NIL</span><br><span class="line">	ret</span><br><span class="line">	END_ENTRY _objc_msgSend</span><br><span class="line"></span><br><span class="line"><span class="comment">// ******************************** //</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// objc_msgSendSuper的汇编实现</span></span><br><span class="line">	ENTRY _objc_msgSendSuper</span><br><span class="line">	MESSENGER_START</span><br><span class="line"></span><br><span class="line">	ldr	x9, [x0, <span class="preprocessor">#CLASS]	<span class="comment">// load class to search</span></span></span><br><span class="line">	<span class="comment">/* x9 = （x9 + #CLASS)为地址取内容， 即x9中放入isa的class */</span></span><br><span class="line">	ldr	x0, [x0, <span class="preprocessor">#RECEIVER]	<span class="comment">// load real receiver</span></span></span><br><span class="line">	<span class="comment">/* x0 = (x0 + #receiver)为地址内容，然后#RECEIVER=0所以这句并没有什么卵用，为以后设计的吧 */</span></span><br><span class="line">	CacheLookup NORMAL		<span class="comment">// calls imp or objc_msgSend_uncached</span></span><br><span class="line">	<span class="comment">/* 跳转CacheLookup */</span></span><br><span class="line"></span><br><span class="line">	END_ENTRY _objc_msgSendSuper</span><br><span class="line"></span><br><span class="line"><span class="comment">// objc_msgSendSuper2的汇编实现 直接会去父类查找方法</span></span><br><span class="line">	ENTRY _objc_msgSendSuper2</span><br><span class="line">	MESSENGER_START</span><br><span class="line"></span><br><span class="line">	ldr	x9, [x0, <span class="preprocessor">#CLASS]</span></span><br><span class="line">	<span class="comment">/* (x0 + #CLASS)为地址取内存内容放入x9，即x9中放入class*/</span></span><br><span class="line">	ldr	x9, [x9, <span class="preprocessor">#SUPERCLASS]	<span class="comment">// load class to search</span></span></span><br><span class="line">	<span class="comment">/* 同上，x9放入SuperClass */</span></span><br><span class="line">	ldr	x0, [x0, <span class="preprocessor">#RECEIVER]	<span class="comment">// load real receiver</span></span></span><br><span class="line">	<span class="comment">/* 同上，x0中放入真正的reveiver */</span></span><br><span class="line">	CacheLookup NORMAL</span><br><span class="line">	<span class="comment">/* 跳转CacheLookup */</span></span><br><span class="line"></span><br><span class="line">	END_ENTRY _objc_msgSendSuper2</span><br></pre></td></tr></table></figure>
+<p>由上可知<code>_objc_msgSend</code>这个汇编方法主要的<code>职责与流程</code>是：</p>
+<ul>
+<li>1.self的nil检查与处理</li>
+<li>2.self的taggedpoint情况检查与处理</li>
+<li>3.从self(x0)中取出class放入x9中，方便下一步的方法查找</li>
+<li>4.跳转CacheLookup，进行方法的查找与调用</li>
+</ul>
+<h2 id="CacheLookup">CacheLookup</h2><p>CacheLookup主要功能是从class中查找到sel的imp，</p>
+<p>进入该方法前，x9是class，x1是SEL</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class">.macro</span> CacheLookup</span><br><span class="line">	<span class="comment">// x1 = SEL, x9 = isa</span></span><br><span class="line">	ldp	x10, x11, [x9, <span class="hexcolor">#CAC</span>HE]	<span class="comment">// x10 = buckets, x11 = occupied|mask</span></span><br><span class="line">	<span class="comment">/* 以(x9 + #CACHE)为地址，取内存内容，取2个数据放入x10、x11, x10是buckets的地址，x11的低32位是mask（缓存上限+1），高32位是occupied(已占用的缓存) */</span></span><br><span class="line">	and	w12, w1, w11		<span class="comment">// x12 = _cmd &amp; mask</span></span><br><span class="line">	<span class="comment">/* x12的后32位 = x1的后32位_cmd &amp; x11的后32位mask</span><br><span class="line">	缓存的hash表的key是SEL，hash算法是SEL&amp;mask，冲突的解决方案是线性探查(n--)，这边是取该SEL缓存的最高的slot的值 */</span></span><br><span class="line">	add	x12, x10, x12, LSL #<span class="number">4</span>	<span class="comment">// x12 = buckets + ((_cmd &amp; mask)&lt;&lt;4)</span></span><br><span class="line">	<span class="comment">/* x12 = x10<span class="comment">/*buckets*/</span> + (x12<span class="comment">/*(_cmd &amp; mask)*/</span> &lt;&lt; 4), 定位到此SEL最高的bucket的内存地址,即每个bucket占用8*16位  */</span></span><br><span class="line">	</span><br><span class="line">	ldp	x16, x17, [x12]		<span class="comment">// &#123;x16, x17&#125; = *bucket</span></span><br><span class="line">	<span class="comment">/* 将x12内容作为指针对对应的内存，放入x16 与 x17中, 即x16存了bucket-&gt;sel, x17存了bucket-&gt;imp */</span></span><br><span class="line"><span class="number">1</span>:	cmp	x16, x1			<span class="comment">// if (bucket-&gt;sel != _cmd)</span></span><br><span class="line">	<span class="comment">/* 比较x16 与 x1，即比较缓存的bucket的SEL与要调用的SEL(x1) */</span></span><br><span class="line">	<span class="tag">b</span><span class="class">.ne</span>	<span class="number">2</span>f			<span class="comment">//     scan more</span></span><br><span class="line">	<span class="comment">/* 不相等，跳转到2 继续扫描 */</span></span><br><span class="line">	CacheHit $<span class="number">0</span>			<span class="comment">// call or return imp</span></span><br><span class="line">	<span class="comment">/* 命中 则跳转CacheHit */</span></span><br><span class="line">	</span><br><span class="line"><span class="number">2</span>:	<span class="comment">// not hit: x12 = not-hit bucket</span></span><br><span class="line">	CheckMiss $<span class="number">0</span>			<span class="comment">// miss if bucket-&gt;cls == 0</span></span><br><span class="line">	<span class="comment">/* 如果ucket-&gt;cls == 0，则直接查找imp */</span></span><br><span class="line">	cmp	x12, x10		<span class="comment">// wrap if bucket == buckets</span></span><br><span class="line">	<span class="comment">/* 比较x12 与 x10  即当前的bucket与buckets，相等了则代表其他线程修改了缓存 */</span></span><br><span class="line">	<span class="tag">b</span><span class="class">.eq</span>	<span class="number">3</span>f</span><br><span class="line">	<span class="comment">/* 相等则到3的流程 */</span></span><br><span class="line">	ldp	x16, x17, [x12, #-<span class="number">16</span>]!	<span class="comment">// &#123;x16, x17&#125; = *--bucket</span></span><br><span class="line">	<span class="comment">/* &#123;x16, x17&#125; = (x12 - 16)的值为地址的内存内容，即加载上一个bucket */</span></span><br><span class="line">	<span class="tag">b</span>	<span class="number">1</span>b			<span class="comment">// loop</span></span><br><span class="line">	<span class="comment">/* 无返回的跳转到1 */</span></span><br><span class="line"></span><br><span class="line"><span class="number">3</span>:	<span class="comment">// wrap: x12 = first bucket, w11 = mask</span></span><br><span class="line">	add	x12, x12, w11, UXTW #<span class="number">4</span>	<span class="comment">// x12 = buckets+(mask&lt;&lt;4)</span></span><br><span class="line">	<span class="comment">/* x12 = x12 + (w11(x11的低32位) &lt;&lt; 4)  */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// clone scanning loop to crash instead of hang when cache is corrupt</span></span><br><span class="line"></span><br><span class="line">	ldp	x16, x17, [x12]		<span class="comment">// &#123;x16, x17&#125; = *bucket</span></span><br><span class="line"><span class="number">1</span>:	cmp	x16, x1			<span class="comment">// if (bucket-&gt;sel != _cmd)</span></span><br><span class="line">	<span class="tag">b</span><span class="class">.ne</span>	<span class="number">2</span>f			<span class="comment">//     scan more</span></span><br><span class="line">	CacheHit $<span class="number">0</span>			<span class="comment">// call or return imp</span></span><br><span class="line">	</span><br><span class="line"><span class="number">2</span>:	<span class="comment">// not hit: x12 = not-hit bucket</span></span><br><span class="line">	CheckMiss $<span class="number">0</span>			<span class="comment">// miss if bucket-&gt;cls == 0</span></span><br><span class="line">	cmp	x12, x10		<span class="comment">// wrap if bucket == buckets</span></span><br><span class="line">	ldp	x16, x17, [x12, #-<span class="number">16</span>]!	<span class="comment">// &#123;x16, x17&#125; = *--bucket</span></span><br><span class="line"></span><br><span class="line"><span class="number">3</span>:	<span class="comment">// double wrap - busted</span></span><br><span class="line">					<span class="comment">// x0 = receiver</span></span><br><span class="line">					<span class="comment">// x1 = SEL</span></span><br><span class="line">	mov	x2, x9			<span class="comment">// x2 = isa</span></span><br><span class="line">	<span class="comment">/* x2 = x9， 即x2 = class */</span></span><br><span class="line"></span><br><span class="line"><span class="class">.if</span> $<span class="number">0</span> == GETIMP</span><br><span class="line">	mov	x0, #<span class="number">0</span></span><br><span class="line">	<span class="tag">b</span>	_cache_getImp_corrupt_cache_error</span><br><span class="line">	<span class="comment">/* 将x0置为0，无返回跳转_cache_getImp_corrupt_cache_error */</span></span><br><span class="line"><span class="class">.else</span></span><br><span class="line">	<span class="tag">b</span>	_objc_msgSend_corrupt_cache_error</span><br><span class="line">	<span class="comment">/* 无返回跳转_objc_msgSend_corrupt_cache_error */</span></span><br><span class="line"><span class="class">.endif</span></span><br><span class="line"></span><br><span class="line"><span class="class">.endmacro</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">LGetImpHit:</span><br><span class="line">	<span class="comment">/* 在缓存中找到了imp，此时imp在x17 */</span></span><br><span class="line">	<span class="comment">// imp in x17</span></span><br><span class="line">	<span class="comment">// don't return msgSend_uncached</span></span><br><span class="line">	adrp	x16, __objc_msgSend_uncached_impcache@PAGE</span><br><span class="line">	add	x16, x16, __objc_msgSend_uncached_impcache@PAGEOFF</span><br><span class="line">	<span class="comment">/* 加载__objc_msgSend_uncached_impcache方法地址到x16 */</span></span><br><span class="line">	cmp	x16, x17</span><br><span class="line">	<span class="comment">/* 比较传进的imp与__objc_msgSend_uncached_impcache */</span></span><br><span class="line">	csel	x0, x17, xzr, ne	<span class="comment">// if imp!=uncached then imp else 0 </span></span><br><span class="line">	<span class="comment">/* x0 = (x16 != x17 ? x17 : xzr（0）), 即判断imp不是__objc_msgSend_uncached_impcache时，则返回imp，否则返回0(xzr寄存器作为源寄存器时，读出来是0) */</span></span><br><span class="line">	ret</span><br><span class="line">	<span class="comment">/* 返回 */</span></span><br><span class="line"></span><br><span class="line">LGetImpMiss:</span><br><span class="line">	mov	x0, #<span class="number">0</span></span><br><span class="line">	<span class="comment">/* x0放入0 */</span></span><br><span class="line">	ret</span><br><span class="line"></span><br><span class="line">	END_ENTRY _cache_getImp</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class">.macro</span> CacheHit</span><br><span class="line">	MESSENGER_END_FAST</span><br><span class="line"><span class="class">.if</span> $<span class="number">0</span> == NORMAL</span><br><span class="line">	br	x17			<span class="comment">// call imp</span></span><br><span class="line">	<span class="comment">/* 如果Normal模式，有返回的跳转到x17的地址，即执行imp */</span></span><br><span class="line"><span class="class">.else</span></span><br><span class="line">	<span class="tag">b</span>	LGetImpHit</span><br><span class="line">	<span class="comment">/* 如果是GETIMP模式，无返回跳转LGetImpHit */</span></span><br><span class="line"><span class="class">.endif</span></span><br><span class="line"><span class="class">.endmacro</span></span><br><span class="line"></span><br><span class="line"><span class="class">.macro</span> CheckMiss</span><br><span class="line"><span class="comment">/* 进入时，x16存的当前bucket的SEL */</span></span><br><span class="line"><span class="class">.if</span> $<span class="number">0</span> == NORMAL			<span class="comment">// miss if bucket-&gt;cls == 0</span></span><br><span class="line">	cbz	x16, __objc_msgSend_uncached_impcache</span><br><span class="line">	<span class="comment">/* 如果x16为0则跳转__objc_msgSend_uncached_impcache来直接查找方法。即当前的slot中无缓存，说明该方法还没缓存过 */</span></span><br><span class="line"><span class="class">.else</span></span><br><span class="line">	cbz	x16, LGetImpMiss</span><br><span class="line">	<span class="comment">/* 如果x16为0则跳转LGetImpMiss */</span></span><br><span class="line"><span class="class">.endif</span></span><br><span class="line">.endmacro</span><br></pre></td></tr></table></figure>
+<p>由上可知，CacheLookup的主要职责与流程是：</p>
+<ul>
+<li>1:查找clss的cache的hash表，查找是否存在该IMP的缓存</li>
+<li>2:如果查找到了缓存IMP，则直接调用</li>
+<li>3:否则调用__objc_msgSend_uncached_impcache来直接查找方法</li>
+</ul>
+<h2 id="__objc_msgSend_uncached_impcache">__objc_msgSend_uncached_impcache</h2><p>当在缓存中没有找到imp，就会调用这个方法，并且在查找成功后会存入class的缓存中</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line">STATIC_ENTRY __objc_msgSend_uncached_impcache</span><br><span class="line"></span><br><span class="line"><span class="comment">// THIS IS NOT A CALLABLE C FUNCTION</span></span><br><span class="line"><span class="comment">// Out-of-band x9 is the class to search</span></span><br><span class="line"></span><br><span class="line">MESSENGER_START</span><br><span class="line"></span><br><span class="line"><span class="comment">// push frame</span></span><br><span class="line">stp	fp, lr, [sp, <span class="preprocessor">#-<span class="number">16</span>]!</span></span><br><span class="line"><span class="comment">/* sp -= 16, 保存当前fp, lr到sp的位置(占据sp-16， sp-8) */</span></span><br><span class="line">mov	fp, sp</span><br><span class="line"><span class="comment">/* 将sp放入fp中，即把当前的sp作为这个栈帧的frame pointer */</span></span><br><span class="line"></span><br><span class="line">MESSENGER_END_SLOW</span><br><span class="line"></span><br><span class="line"><span class="comment">// save parameter registers: x0..x8, q0..q7</span></span><br><span class="line">sub	sp, sp, <span class="preprocessor">#(<span class="number">10</span>*<span class="number">8</span> + <span class="number">8</span>*<span class="number">16</span>)</span></span><br><span class="line"><span class="comment">/* sp -= ((10*8 + 8*16)), 即此次方法调用需要208byte的空间，将栈低-208的空间留给变量 */</span></span><br><span class="line">stp	q0, q1, [sp, <span class="preprocessor">#(<span class="number">0</span>*<span class="number">16</span>)]</span></span><br><span class="line">stp	q2, q3, [sp, <span class="preprocessor">#(<span class="number">2</span>*<span class="number">16</span>)]</span></span><br><span class="line">stp	q4, q5, [sp, <span class="preprocessor">#(<span class="number">4</span>*<span class="number">16</span>)]</span></span><br><span class="line">stp	q6, q7, [sp, <span class="preprocessor">#(<span class="number">6</span>*<span class="number">16</span>)]</span></span><br><span class="line">stp	x0, x1, [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">0</span>*<span class="number">8</span>)]</span></span><br><span class="line">stp	x2, x3, [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">2</span>*<span class="number">8</span>)]</span></span><br><span class="line">stp	x4, x5, [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">4</span>*<span class="number">8</span>)]</span></span><br><span class="line">stp	x6, x7, [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">6</span>*<span class="number">8</span>)]</span></span><br><span class="line">str	x8,     [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">8</span>*<span class="number">8</span>)]</span></span><br><span class="line"><span class="comment">/* 将上述寄存器内容保存在刚才的208byte的内存中，保存参数 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// receiver and selector already in x0 and x1</span></span><br><span class="line">mov	x2, x9</span><br><span class="line"><span class="comment">/* x9放入x2中 x9：class */</span></span><br><span class="line">bl	__class_lookupMethodAndLoadCache3</span><br><span class="line"><span class="comment">/* 跳转__class_lookupMethodAndLoadCache3 这是个c方法，用来直接查找方法(不会去缓存中寻找,因为上面已经找过了) 函数的返回值会放在x0 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 跳转回来，此时 imp 在 x0寄存器中</span></span><br><span class="line"></span><br><span class="line">mov	x17, x0</span><br><span class="line"><span class="comment">/* x0放入x17中，即x17存方法的imp */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// restore registers and return</span></span><br><span class="line">ldp	q0, q1, [sp, <span class="preprocessor">#(<span class="number">0</span>*<span class="number">16</span>)]</span></span><br><span class="line">ldp	q2, q3, [sp, <span class="preprocessor">#(<span class="number">2</span>*<span class="number">16</span>)]</span></span><br><span class="line">ldp	q4, q5, [sp, <span class="preprocessor">#(<span class="number">4</span>*<span class="number">16</span>)]</span></span><br><span class="line">ldp	q6, q7, [sp, <span class="preprocessor">#(<span class="number">6</span>*<span class="number">16</span>)]</span></span><br><span class="line">ldp	x0, x1, [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">0</span>*<span class="number">8</span>)]</span></span><br><span class="line">ldp	x2, x3, [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">2</span>*<span class="number">8</span>)]</span></span><br><span class="line">ldp	x4, x5, [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">4</span>*<span class="number">8</span>)]</span></span><br><span class="line">ldp	x6, x7, [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">6</span>*<span class="number">8</span>)]</span></span><br><span class="line">ldr	x8,     [sp, <span class="preprocessor">#(<span class="number">8</span>*<span class="number">16</span>+<span class="number">8</span>*<span class="number">8</span>)]</span></span><br><span class="line"><span class="comment">/* 将刚才保存的寄存器值从栈中恢复 */</span></span><br><span class="line">mov	sp, fp</span><br><span class="line"><span class="comment">/* 把当前stack pointer 设为 frame point的值 */</span></span><br><span class="line">ldp	fp, lr, [sp], <span class="preprocessor">#<span class="number">16</span></span></span><br><span class="line"><span class="comment">/* sp的内容为地址取内存放入&#123;fp,lr&#125;中，并sp+=16， 即还原到进栈前的状态 */</span></span><br><span class="line"></span><br><span class="line">br	x17</span><br><span class="line"><span class="comment">/* 有返回的跳转x17(imp) */</span></span><br><span class="line"></span><br><span class="line">END_ENTRY __objc_msgSend_uncached_impcache</span><br></pre></td></tr></table></figure>
+<p>由上可知，__objc_msgSend_uncached_impcache主要的职责与流程是：</p>
+<ul>
+<li>入栈，创建一个新的栈帧</li>
+<li>调用__class_lookupMethodAndLoadCache3直接查找方法的imp</li>
+<li>调用imp</li>
+<li>出栈</li>
+</ul>
+<h2 id="_class_lookupMethodAndLoadCache3">_class_lookupMethodAndLoadCache3</h2><p>该方法功能是查找方法的imp并存入class的cache中,过程中会直接忽略缓存，因为在汇编代码的里面已经检查过了</p>
+<p>不过具体逻辑不在这个方法中，而是调用了lookUpImpOrForward这个c方法，并传入flag告知该方法不需要initialize 不需要查找缓存</p>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// </span></span><br><span class="line">IMP _class_lookupMethodAndLoadCache3(<span class="keyword">id</span> obj, SEL sel, Class cls)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> lookUpImpOrForward(cls, sel, obj, </span><br><span class="line">                              <span class="literal">YES</span><span class="comment">/*initialize*/</span>, <span class="literal">NO</span><span class="comment">/*cache*/</span>, <span class="literal">YES</span><span class="comment">/*resolver*/</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="lookUpImpOrForward">lookUpImpOrForward</h2><p>该方法完成了标准的IMP查找，是用C++来实现的</p>
+<p>cache=NO表示忽略不加锁的缓存查找，不过后面还是会查找缓存，一般initialize和cache=YES</p>
+<p>有些条件下，会返回_objc_msgForward或_objc_msgForward_stret</p>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><span class="line">_objc_msgForward_stret</span><br><span class="line">IMP lookUpImpOrForward(Class cls, SEL sel, <span class="keyword">id</span> inst, </span><br><span class="line">                       <span class="keyword">bool</span> initialize, <span class="keyword">bool</span> cache, <span class="keyword">bool</span> resolver)</span><br><span class="line">&#123;</span><br><span class="line">    Class curClass;</span><br><span class="line">    IMP imp = <span class="literal">nil</span>;</span><br><span class="line">    Method meth;</span><br><span class="line">    <span class="comment">// 标记了是否走过resolveInstance流程</span></span><br><span class="line">    <span class="keyword">bool</span> triedResolver = <span class="literal">NO</span>;</span><br><span class="line"></span><br><span class="line">    rwlock_assert_unlocked(&amp;runtimeLock);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Optimistic cache lookup</span></span><br><span class="line">    <span class="keyword">if</span> (cache) &#123;</span><br><span class="line">    	<span class="comment">// 先查找缓存， 用汇编实现</span></span><br><span class="line">        imp = cache_getImp(cls, sel);</span><br><span class="line">        <span class="keyword">if</span> (imp) <span class="keyword">return</span> imp;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!cls-&gt;isRealized()) &#123;</span><br><span class="line">    	<span class="comment">// 如果class还没有实现，实现类</span></span><br><span class="line">        rwlock_write(&amp;runtimeLock);</span><br><span class="line">        realizeClass(cls);</span><br><span class="line">        rwlock_unlock_write(&amp;runtimeLock);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (initialize  &amp;&amp;  !cls-&gt;isInitialized()) &#123;</span><br><span class="line">    <span class="comment">// 如果类还没有调用initialied方法，则调用initializer方法</span></span><br><span class="line">        _class_initialize (_class_getNonMetaClass(cls, inst));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 加锁来保证method-lookup 和 cache-fill原子性</span></span><br><span class="line"> retry:</span><br><span class="line">    rwlock_read(&amp;runtimeLock);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Ignore GC selectors</span></span><br><span class="line">    <span class="keyword">if</span> (ignoreSelector(sel)) &#123;</span><br><span class="line">        imp = _objc_ignored_method;</span><br><span class="line">        cache_fill(cls, sel, imp);</span><br><span class="line">        <span class="keyword">goto</span> done;</span><br><span class="line">    &#125;</span><br><span class="line">	<span class="comment">// 尝试读缓存</span></span><br><span class="line">    imp = cache_getImp(cls, sel);</span><br><span class="line">    <span class="comment">// 找到则进入done的逻辑</span></span><br><span class="line">    <span class="keyword">if</span> (imp) <span class="keyword">goto</span> done;</span><br><span class="line">    </span><br><span class="line">	<span class="comment">// 查找这个类的方法列表，不会查找父类</span></span><br><span class="line">    meth = getMethodNoSuper_nolock(cls, sel);</span><br><span class="line">    <span class="keyword">if</span> (meth) &#123;</span><br><span class="line">    	<span class="comment">// 缓存这个img到cache中</span></span><br><span class="line">        log_and_fill_cache(cls, cls, meth-&gt;imp, sel);</span><br><span class="line">        imp = meth-&gt;imp;</span><br><span class="line">        <span class="comment">// 跳转done的逻辑</span></span><br><span class="line">        <span class="keyword">goto</span> done;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 按照继承链循环查找父类的缓存和方法列表</span></span><br><span class="line">    curClass = cls;</span><br><span class="line">    <span class="keyword">while</span> ((curClass = curClass-&gt;superclass)) &#123;</span><br><span class="line">        <span class="comment">// 查找父类缓存</span></span><br><span class="line">        imp = cache_getImp(curClass, sel);</span><br><span class="line">        <span class="keyword">if</span> (imp) &#123;</span><br><span class="line">            <span class="keyword">if</span> (imp != (IMP)_objc_msgForward_impcache) &#123;</span><br><span class="line">                <span class="comment">// 如果不是_objc_msgForward_impcache，则缓存并跳转done</span></span><br><span class="line">                log_and_fill_cache(cls, curClass, imp, sel);</span><br><span class="line">                <span class="keyword">goto</span> done;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// 如果是forward，则直接跳出循环，先不处理，为了先来一次消息派发的resolver那个流程</span></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 查找父类的方法列表，找到则缓存并跳转done</span></span><br><span class="line">        meth = getMethodNoSuper_nolock(curClass, sel);</span><br><span class="line">        <span class="keyword">if</span> (meth) &#123;</span><br><span class="line">            log_and_fill_cache(cls, curClass, meth-&gt;imp, sel);</span><br><span class="line">            imp = meth-&gt;imp;</span><br><span class="line">            <span class="keyword">goto</span> done;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 至此，所有父类都没有该方法，先尝试一次resolver的流程</span></span><br><span class="line">    <span class="keyword">if</span> (resolver  &amp;&amp;  !triedResolver) &#123;</span><br><span class="line">        rwlock_unlock_read(&amp;runtimeLock);</span><br><span class="line">        <span class="comment">// 调用_class_resolveMethod执行reslover流程</span></span><br><span class="line">        _class_resolveMethod(cls, sel, inst);</span><br><span class="line">        triedResolver = <span class="literal">YES</span>;</span><br><span class="line">        <span class="comment">// 直接进try流程，因为没有持有锁，有可能relover的过程中已经被其他线程改了</span></span><br><span class="line">        <span class="keyword">goto</span> retry;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 找不到方法，并且resolver也没解决，则使用消息转发</span></span><br><span class="line">    imp = (IMP)_objc_msgForward_impcache;</span><br><span class="line">    <span class="comment">// 缓存sel的imp为转发</span></span><br><span class="line">    cache_fill(cls, sel, imp);</span><br><span class="line"></span><br><span class="line"> done:</span><br><span class="line"> 	<span class="comment">// 返回imp</span></span><br><span class="line">    rwlock_unlock_read(&amp;runtimeLock);</span><br><span class="line">    </span><br><span class="line">    assert(!(ignoreSelector(sel)  &amp;&amp;  imp != (IMP)&amp;_objc_ignored_method));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> imp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>综上lookUpImpOrForward额职责与流程是：</p>
+<ul>
+<li>1：如果cache=YES，先不加锁的查找一次缓存</li>
+<li>2：查找缓存，找到进入7，否则往下</li>
+<li>3：查找这个类的方法列表，找到缓存并进入7，否则往下</li>
+<li>4：查找父类的缓存与方法列表，没找到则查找更上一级的父类，重复此过程，直到没有父类，找到则(缓存)并进入7，否则往下</li>
+<li>5：如果没尝试过resolver，调用_class_resolveMethod，进入resolver流程，也就是调用类的resolveClassMethod或resolveInstanceMethod，然后跳到2，否则往下</li>
+<li>6：end 缓存并返回_objc_msgForward_impcache</li>
+<li>7：end 返回找到的imp</li>
+</ul>
+<h2 id="__objc_msgForward_impcache">__objc_msgForward_impcache</h2><p>然后，看一下上面出现的objc_msgForward_impcache的实现，这方法是由汇编代码实现</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="label">STATIC_ENTRY</span> __objc_msgForward_impcache</span><br><span class="line"></span><br><span class="line"><span class="label">MESSENGER_START</span></span><br><span class="line"><span class="keyword">nop</span><br><span class="line"></span><span class="label">MESSENGER_END_SLOW</span></span><br><span class="line"></span><br><span class="line">// No <span class="keyword">stret </span>specialization.</span><br><span class="line"><span class="keyword">b	</span>__objc_msgForward</span><br><span class="line"><span class="comment">/* 跳转__objc_msgForward */</span></span><br><span class="line"></span><br><span class="line"><span class="label">END_ENTRY</span> __objc_msgForward_impcache</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="label">ENTRY</span> __objc_msgForward</span><br><span class="line"></span><br><span class="line"><span class="keyword">adrp	</span>x17, __objc_forward_handler<span class="comment">@PAGE</span></span><br><span class="line"><span class="comment">/* 将__objc_forward_handler做在的内存页地址放入x17中  */</span></span><br><span class="line"><span class="keyword">ldr	</span>x17, [x17, __objc_forward_handler<span class="comment">@PAGEOFF]</span></span><br><span class="line"><span class="comment">/* x17 = __objc_forward_handler所在内存页中偏移量 + x17，即x17</span><br><span class="line">是__objc_forward_handler这个方法 */</span></span><br><span class="line"><span class="keyword">br	</span>x17</span><br><span class="line"><span class="comment">/* 有返回的跳转__objc_forward_handler */</span></span><br><span class="line"></span><br><span class="line"><span class="label">END_ENTRY</span> __objc_msgForward</span><br></pre></td></tr></table></figure>
+<p>可知，<strong>objc_msgForward_impcache 调用了 </strong>objc_msgForward 调用了__objc_forward_handler，</p>
+<p>而__objc_forward_handler默认实现objc_defaultForwardHandler没做任何事情，只是报错和crash</p>
+<p>而我们平时forward的具体实现是在<code>Core Foundation</code>这一层中通过<code>objc_setForwardHandler</code>来<code>注入</code>实现的。</p>
+<p>```</p>
+<h2 id="总结">总结</h2><p>经过源码分析，可以得出整个过程是：<br><img src="/uploads/msgsendFlowChart.png" alt="flowchart"></p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Objective-C/" rel="tag">#Objective-C</a>
+          
+            <a href="/tags/Runtime/" rel="tag">#Runtime</a>
+          
+            <a href="/tags/arm64/" rel="tag">#arm64</a>
+          
+            <a href="/tags/iOS/" rel="tag">#iOS</a>
+          
+            <a href="/tags/汇编/" rel="tag">#汇编</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/07/04/Runloop/" rel="next" title="CoreFundation源码解析之RunLoop">
+                <i class="fa fa-chevron-left"></i> CoreFundation源码解析之RunLoop
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2016/11/02/objc_msgsend/"
+     data-title="Objective-C Runtime汇编源码解析之objc_msgSend(arm64版本)"
+     data-content=""
+     data-url="http://blog.SatoshiChin.com/2016/11/02/objc_msgsend/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/11/02/objc_msgsend/"
+           data-title="Objective-C Runtime汇编源码解析之objc_msgSend(arm64版本)" data-url="http://blog.SatoshiChin.com/2016/11/02/objc_msgsend/">
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="/uploads/avatar.png" alt="SatoshiChin" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">SatoshiChin</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">Think different</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">8</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            <a href="/categories">
+              <span class="site-state-item-count">6</span>
+              <span class="site-state-item-name">分类</span>
+              </a>
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            <a href="/tags">
+              <span class="site-state-item-count">11</span>
+              <span class="site-state-item-name">标签</span>
+              </a>
+          </div>
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://www.weibo.com/u/2840829854" target="_blank">
+                  
+                    <i class="fa fa-globe"></i> weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator">
+            <i class="fa fa-angle-double-up"></i>
+          </div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#_objc_msgSend"><span class="nav-number">2.</span> <span class="nav-text">_objc_msgSend</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CacheLookup"><span class="nav-number">3.</span> <span class="nav-text">CacheLookup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#__objc_msgSend_uncached_impcache"><span class="nav-number">4.</span> <span class="nav-text">__objc_msgSend_uncached_impcache</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#_class_lookupMethodAndLoadCache3"><span class="nav-number">5.</span> <span class="nav-text">_class_lookupMethodAndLoadCache3</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lookUpImpOrForward"><span class="nav-number">6.</span> <span class="nav-text">lookUpImpOrForward</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#__objc_msgForward_impcache"><span class="nav-number">7.</span> <span class="nav-text">__objc_msgForward_impcache</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator">
+            <i class="fa fa-angle-double-down"></i>
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">SatoshiChin</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT
+  </a>
+</div>
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"satoshichin"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+    
+     
+
+
+    
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 1 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>
