@@ -37,7 +37,7 @@
 <link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Swift Protocol Extension" />
+  <meta name="keywords" content="客户端现状" />
 
 
 
@@ -53,19 +53,25 @@
 
 
 
-<meta name="description" content="Swift Protocol Extension中的方法派发最近在玩Swift，总体挺有趣，但偶尔会碰到坑，基本都是静态类型的特性导致的。其中在Protocol的Extension中突遇大坑。简要介绍下Protocol Extension Swift 2.0后新推出的特性，可以给已有的协议增加方法以及非存储型的实例变量，并拥有方法实现。
-Protocol Extension作为面向协议编程中极为重">
+<meta name="description" content="2016年，或多或少都能感觉到客户端行业的萎缩，或者可能已经到了“悬崖边缘”，2017年会更加明显，个人感觉原因主要是以下几点。
+原因1.移动市场的成熟体现在两方面，客户端技术本身上和客户端人才上：
+技术上，如今移动基础设施实在是太成熟了，特别是在大公司了，以至与想搞个技术上大新闻太难了。
+人才上，已经过饱和，虽然以前段时间的我面试他人的经历来看，高端人才还是很稀少，但是对于大部分(小)公司来说，">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Swift Protocol Extension中的方法派发">
-<meta property="og:url" content="http://blog.SatoshiChin.com/2016/01/04/SwiftExtension中的方法派发/index.html">
+<meta property="og:title" content="2016客户端现状相关思考">
+<meta property="og:url" content="http://blog.SatoshiChin.com/2017/03/04/2016客户端现状相关思考/index.html">
 <meta property="og:site_name" content="SatoshiChin's blog">
-<meta property="og:description" content="Swift Protocol Extension中的方法派发最近在玩Swift，总体挺有趣，但偶尔会碰到坑，基本都是静态类型的特性导致的。其中在Protocol的Extension中突遇大坑。简要介绍下Protocol Extension Swift 2.0后新推出的特性，可以给已有的协议增加方法以及非存储型的实例变量，并拥有方法实现。
-Protocol Extension作为面向协议编程中极为重">
-<meta property="og:updated_time" content="2016-01-03T16:09:04.000Z">
+<meta property="og:description" content="2016年，或多或少都能感觉到客户端行业的萎缩，或者可能已经到了“悬崖边缘”，2017年会更加明显，个人感觉原因主要是以下几点。
+原因1.移动市场的成熟体现在两方面，客户端技术本身上和客户端人才上：
+技术上，如今移动基础设施实在是太成熟了，特别是在大公司了，以至与想搞个技术上大新闻太难了。
+人才上，已经过饱和，虽然以前段时间的我面试他人的经历来看，高端人才还是很稀少，但是对于大部分(小)公司来说，">
+<meta property="og:updated_time" content="2017-03-04T09:28:18.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Swift Protocol Extension中的方法派发">
-<meta name="twitter:description" content="Swift Protocol Extension中的方法派发最近在玩Swift，总体挺有趣，但偶尔会碰到坑，基本都是静态类型的特性导致的。其中在Protocol的Extension中突遇大坑。简要介绍下Protocol Extension Swift 2.0后新推出的特性，可以给已有的协议增加方法以及非存储型的实例变量，并拥有方法实现。
-Protocol Extension作为面向协议编程中极为重">
+<meta name="twitter:title" content="2016客户端现状相关思考">
+<meta name="twitter:description" content="2016年，或多或少都能感觉到客户端行业的萎缩，或者可能已经到了“悬崖边缘”，2017年会更加明显，个人感觉原因主要是以下几点。
+原因1.移动市场的成熟体现在两方面，客户端技术本身上和客户端人才上：
+技术上，如今移动基础设施实在是太成熟了，特别是在大公司了，以至与想搞个技术上大新闻太难了。
+人才上，已经过饱和，虽然以前段时间的我面试他人的经历来看，高端人才还是很稀少，但是对于大部分(小)公司来说，">
 
 
 
@@ -77,7 +83,7 @@ Protocol Extension作为面向协议编程中极为重">
   };
 </script>
 
-  <title> Swift Protocol Extension中的方法派发 | SatoshiChin's blog </title>
+  <title> 2016客户端现状相关思考 | SatoshiChin's blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -217,7 +223,7 @@ Protocol Extension作为面向协议编程中极为重">
             
             
               
-                Swift Protocol Extension中的方法派发
+                2016客户端现状相关思考
               
             
           </h1>
@@ -226,8 +232,8 @@ Protocol Extension作为面向协议编程中极为重">
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2016-01-04T00:06:45+08:00" content="2016-01-04">
-              2016-01-04
+            <time itemprop="dateCreated" datetime="2017-03-04T17:01:33+08:00" content="2017-03-04">
+              2017-03-04
             </time>
           </span>
 
@@ -236,8 +242,8 @@ Protocol Extension作为面向协议编程中极为重">
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/Swift/" itemprop="url" rel="index">
-                    <span itemprop="name">Swift</span>
+                  <a href="/categories/杂谈/" itemprop="url" rel="index">
+                    <span itemprop="name">杂谈</span>
                   </a>
                 </span>
 
@@ -252,8 +258,8 @@ Protocol Extension作为面向协议编程中极为重">
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/01/04/SwiftExtension中的方法派发/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/01/04/SwiftExtension中的方法派发/" itemprop="commentsCount"></span>
+                <a href="/2017/03/04/2016客户端现状相关思考/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/03/04/2016客户端现状相关思考/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -272,95 +278,51 @@ Protocol Extension作为面向协议编程中极为重">
       
 
       
-        <span itemprop="articleBody"><h3 id="Swift_Protocol_Extension中的方法派发">Swift Protocol Extension中的方法派发</h3><h4 id="最近在玩Swift，总体挺有趣，但偶尔会碰到坑，基本都是静态类型的特性导致的。其中在Protocol的Extension中突遇大坑。">最近在玩Swift，总体挺有趣，但偶尔会碰到坑，基本都是静态类型的特性导致的。其中在Protocol的Extension中突遇大坑。</h4><h5 id="简要介绍下Protocol_Extension">简要介绍下Protocol Extension</h5><p> <em>Swift 2.0后新推出的特性，可以给已有的协议增加方法以及非存储型的实例变量，<strong>并拥有方法实现</strong></em>。</p>
-<p>Protocol Extension作为面向协议编程中极为重要的一个工具，日常中经常会用到，且确实如苹果所说，简直就是magic。</p>
-<p>对于我个人而言，Swift的extension或者OC的category，经常会用来践行单一职责的设计思想。</p>
-<h5 id="很日常的场景与问题">很日常的场景与问题</h5><p>协议扩展里有方法A，实现了协议的class或struct中也有A方法，并拥有自己的实现。然后用协议类型的变量指向那些class的实例，并调用A方法</p>
-<p>然后这边出现的一个巨大问题： 用extension给Potocol增加的方法，没有“多态性”！<del>这里可能不能叫动态，毕竟协议不算是子类，但大致就是这个意思</del></p>
-<h5 id="举个栗子">举个栗子</h5><p>定义一个基础的协议People：</p>
-<pre><code>protocol People {
-    <span class="variable"><span class="keyword">var</span> name</span>: String { <span class="keyword">get</span> }
-    <span class="variable"><span class="keyword">var</span> age</span>: <span class="typename">Int</span> { <span class="keyword">get</span> }
-<span class="comment">//    var hobbies: [String] { get }</span>
-}
-</code></pre><p>通过extension给People增加成员变量Hobby</p>
-<pre><code><span class="comment">// MARK: - Hobby</span>
-<span class="class"><span class="keyword">extension</span> <span class="title">People</span> </span>{
-    <span class="keyword">var</span> hobbies: [<span class="type">String</span>] {
-        <span class="built_in">print</span>(<span class="string">"Base Protocol extension hobbies"</span>)
-        <span class="keyword">return</span> []
-    }
-}
-</code></pre><p>定义2个实现了协议的类，其中Archer的hobby方法通过extension增加，为了增加栗子的case</p>
-<pre><code><span class="class"><span class="keyword">class</span> <span class="title">Archer</span>: <span class="typename">People {</span></span>
-    <span class="variable"><span class="keyword">var</span> name</span> = <span class="string">"Emiya"</span>
-    <span class="variable"><span class="keyword">var</span> age</span> = <span class="number">18</span> <span class="comment">// 瞎写的</span>
-}
-
-<span class="comment">// MARK: - Hobby of Archer</span>
-extension Archer {
-    <span class="variable"><span class="keyword">var</span> hobbies</span> : [String] {
-        print(<span class="string">"Archer class's extension hobby"</span>)
-        <span class="keyword">return</span> [<span class="string">"Shoot"</span>, <span class="string">"Rin"</span>]
-    }
-}
-
-<span class="class"><span class="keyword">class</span> <span class="title">Saber</span>: <span class="typename">People {</span></span>
-    <span class="variable"><span class="keyword">var</span> name</span> = <span class="string">"Altria"</span>
-    <span class="variable"><span class="keyword">var</span> age</span> = <span class="number">100000</span> <span class="comment">// 瞎写的</span>
-    <span class="variable"><span class="keyword">var</span> hobbies</span>: [String] {
-        <span class="keyword">get</span> {
-            print(<span class="string">"Saber class's origin hobby"</span>)
-            <span class="keyword">return</span> [<span class="string">"Eat"</span>,<span class="string">"Lion"</span>]
-        }
-    }
-}
-</code></pre><p>尝试调用</p>
-<pre><code><span class="tag">var</span> aPeople: People
-<span class="tag">var</span> archer = <span class="function"><span class="title">Archer</span><span class="params">()</span></span>
-<span class="tag">var</span> saber = <span class="function"><span class="title">Saber</span><span class="params">()</span></span>
-
-aPeople = archer <span class="comment">// 推断为People的变量指向archer</span>
-
-
-archer<span class="class">.hobbies</span> <span class="comment">//  ["Shoot", "Rin"]</span>
-saber<span class="class">.hobbies</span> <span class="comment">// ["Eat", "Lion"]</span>
-aPeople<span class="class">.hobbies</span> <span class="comment">//!意料之外 []</span>
-
-aPeople = saber
-aPeople<span class="class">.hobbies</span> <span class="comment">//!意料之外 []</span>
-</code></pre><p>原本预想aPeople.hobbies会调用运行时实际类型的方法，然而却调用了协议的extension的默认实现</p>
-<p>尝试在协议中增加hobby变量，（去掉注释</p>
-<pre><code>protocol People {
-        <span class="variable"><span class="keyword">var</span> name</span>: String { <span class="keyword">get</span> }
-        <span class="variable"><span class="keyword">var</span> age</span>: <span class="typename">Int</span> { <span class="keyword">get</span> }
-        <span class="variable"><span class="keyword">var</span> hobbies</span>: [String] { <span class="keyword">get</span> }
-}
-</code></pre><p>调用结果</p>
-<pre><code><span class="tag">var</span> aPeople: People
-<span class="tag">var</span> archer = <span class="function"><span class="title">Archer</span><span class="params">()</span></span>
-<span class="tag">var</span> saber = <span class="function"><span class="title">Saber</span><span class="params">()</span></span>
-
-aPeople = archer <span class="comment">// 类型为People的变量指向archer</span>
-
-
-archer<span class="class">.hobbies</span> <span class="comment">//  ["Shoot", "Rin"]</span>
-saber<span class="class">.hobbies</span> <span class="comment">// ["Eat", "Lion"]</span>
-aPeople<span class="class">.hobbies</span> <span class="comment">//!!["Shoot", "Rin"]</span>
-
-aPeople = saber
-aPeople<span class="class">.hobbies</span> <span class="comment">//!! ["Eat", "Lion"]</span>
-</code></pre><p>“正确”的调用了真正类型的方法</p>
-<h4 id="结论">结论</h4><p>对于调用某实例的A方法时</p>
-<p>if A是通过Protocol Extension增加的 &amp;&amp; 协议本身没声明A &amp;&amp; 当前实例的编译器推断类型是Protocol</p>
+        <span itemprop="articleBody"><p>2016年，或多或少都能感觉到客户端行业的萎缩，或者可能已经到了“悬崖边缘”，2017年会更加明显，个人感觉原因主要是以下几点。</p>
+<h3 id="原因">原因</h3><h4 id="1-移动市场的成熟">1.移动市场的成熟</h4><p>体现在两方面，客户端技术本身上和客户端人才上：</p>
+<p>技术上，如今移动基础设施实在是太成熟了，特别是在大公司了，以至与想搞个技术上大新闻太难了。</p>
+<p>人才上，已经过饱和，虽然以前段时间的我面试他人的经历来看，高端人才还是很稀少，但是对于大部分(小)公司来说，这些人才已经很能满足业务需求了。</p>
+<p>可以预见的将来，客户端从业人员，技术实力一般的，在找工作上会有较大困难，而对于技术实力较好的，在工作中较难搞出大突破。</p>
+<h4 id="2-前端技术的冲击">2.前端技术的冲击</h4><p>主要是以ReactNative与Weex为代表的技术，技术特点都是上层使用JS等前端技术，通过JSCore桥接到下层的native层。</p>
+<p>这类技术比起native的很显著优点是：</p>
 <ul>
-<li>则调用Protocol的Extension中的该方法的实现。</li>
+<li>动态性高</li>
+<li>开发效率高</li>
+<li>门槛低</li>
+<li>一份代码，三端运行</li>
 </ul>
-<p>else</p>
+<p>而这些优点，正好是大部分公司所关心的，既能快速快速更新业务，又能降低成本。</p>
+<p>可以预见，除了性能要求与UI要求较为苛刻的业务，都会越来越倾向于选择这类技术。这个便会造成客户端相关的工作的减少。</p>
+<p>此外，客户端越来越前端化，也是个趋势，特别是在UI布局上。</p>
+<h4 id="3-行业热点转移">3.行业热点转移</h4><p>如果前几年，热点还是移动App本身的构建上的话，如今的热点可能已经是</p>
 <ul>
-<li>调用运行时该实例真正的Type的对应的方法</li>
+<li>以VR、AR为代表的以图形学为基础相关新技术</li>
+<li>直播等技术，这个可能快过了</li>
+<li>机器学习，特别是深度学习</li>
 </ul>
-<p><em>Swift目前这个版本是这样的，不知是苹果的有意为之还是只是一个Bug</em></p>
+<p>而热点的转移，可能会影响到战略的转移，而战略的转移可能会影响资源的分配，而资源的分配势必会影响从业人员的个人发展(不管是技术还是业绩)。</p>
+<h3 id="应对措施">应对措施</h3><p>对于在可能已经”在悬崖边上”的我们，应对方式是要<code>提升个人价值，降低可替换性</code>，而以下几点措施本质上其实也正是如此。</p>
+<h4 id="1-多思考">1.多思考</h4><p>人与人之间可能最不可复制的东西就是个人的思考。</p>
+<p>老板，老板的老板，高管们 同我们这些“社会底层员工”有个很大的区别就是，他们大部分时间都会进行深度思考，思考团队发展，思考业务未来，思考技术，思考战略方向等，而我们可能更多的只是着眼于手头的代码。</p>
+<p>只知道这一步的人和知道下一步的人，存活者显而易见，</p>
+<h4 id="2-提升技术深度">2.提升技术深度</h4><p>在自己的技术栈在业界还没“倒闭”的前提下，第二重要的事就是提升这个栈的深度。</p>
+<p>有句话叫<code>深度决定成败</code>，对于技术上而言，深度更深的人，更容易做出NB的系统，更少的bug，更好的性能，可能更大的自信与影响力等。更现实而言更容易留下来或者通过面试。</p>
+<p>另外一点，由于深度到了一定程度，这个深度也会成为其他栈的深度，从而使自己能更简单的完成第三点措施。举个例子，比如iOS你的深度到了汇编层、操作系统层，那么这些同时也都是安卓、后端栈的深度。</p>
+<h4 id="3-提升技术广度">3.提升技术广度</h4><p>即跨栈。如果你是iOS栈，那么去学习下安卓，前端，后端。</p>
+<p>会多个栈的优势太明显了，包含但不限于</p>
+<ul>
+<li>更广的技术视野</li>
+<li>可替代性降低</li>
+<li>团队中，能承担更大的责任与任务，得到更大的资源</li>
+</ul>
+<p>如果时间有限，只能选一个来跨，可能后端更合适点，因为 </p>
+<ol>
+<li>后端与客户端区别较大，提升会很大</li>
+<li>后端更接近业务，能提升自己业务的深度 </li>
+<li>后端在团队中的重要性相对更高</li>
+</ol>
+<p>此外，对于热点，比如机器学习，还是需要所有涉猎，还能抓一抓快忘了的数学相关基础，如果能在工作中加以尝试，就更酷了。</p>
+<h3 id="最后">最后</h3><p>2017年，正式入职的第二年，希望自己能这几点上做的更好。</p>
 </span>
       
     </div>
@@ -369,9 +331,11 @@ aPeople<span class="class">.hobbies</span> <span class="comment">//!! ["Eat", "L
       
         <div class="post-tags">
           
-            <a href="/tags/Swift/" rel="tag">#Swift</a>
+            <a href="/tags/个人发展/" rel="tag">#个人发展</a>
           
-            <a href="/tags/iOS/" rel="tag">#iOS</a>
+            <a href="/tags/思考/" rel="tag">#思考</a>
+          
+            <a href="/tags/杂谈/" rel="tag">#杂谈</a>
           
         </div>
       
@@ -380,17 +344,13 @@ aPeople<span class="class">.hobbies</span> <span class="comment">//!! ["Eat", "L
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/12/31/2015就要结束了/" rel="next" title="2015，Good bye">
-                <i class="fa fa-chevron-left"></i> 2015，Good bye
+              <a href="/2016/11/02/objc_msgsend/" rel="next" title="Objective-C Runtime汇编源码解析之objc_msgSend(arm64版本)">
+                <i class="fa fa-chevron-left"></i> Objective-C Runtime汇编源码解析之objc_msgSend(arm64版本)
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/03/23/SwiftPractise/" rel="prev" title="实战后的Swift语言感想">
-                实战后的Swift语言感想 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -405,10 +365,10 @@ aPeople<span class="class">.hobbies</span> <span class="comment">//!! ["Eat", "L
 
     <div class="post-spread">
       
-        <div class="ds-share flat" data-thread-key="2016/01/04/SwiftExtension中的方法派发/"
-     data-title="Swift Protocol Extension中的方法派发"
+        <div class="ds-share flat" data-thread-key="2017/03/04/2016客户端现状相关思考/"
+     data-title="2016客户端现状相关思考"
      data-content=""
-     data-url="http://blog.SatoshiChin.com/2016/01/04/SwiftExtension中的方法派发/">
+     data-url="http://blog.SatoshiChin.com/2017/03/04/2016客户端现状相关思考/">
   <div class="ds-share-inline">
     <ul  class="ds-share-icons-16">
 
@@ -436,8 +396,8 @@ aPeople<span class="class">.hobbies</span> <span class="comment">//!! ["Eat", "L
         
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/01/04/SwiftExtension中的方法派发/"
-           data-title="Swift Protocol Extension中的方法派发" data-url="http://blog.SatoshiChin.com/2016/01/04/SwiftExtension中的方法派发/">
+      <div class="ds-thread" data-thread-key="2017/03/04/2016客户端现状相关思考/"
+           data-title="2016客户端现状相关思考" data-url="http://blog.SatoshiChin.com/2017/03/04/2016客户端现状相关思考/">
       </div>
     
   </div>
@@ -537,7 +497,7 @@ aPeople<span class="class">.hobbies</span> <span class="comment">//!! ["Eat", "L
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Swift_Protocol_Extension中的方法派发"><span class="nav-number">1.</span> <span class="nav-text">Swift Protocol Extension中的方法派发</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#最近在玩Swift，总体挺有趣，但偶尔会碰到坑，基本都是静态类型的特性导致的。其中在Protocol的Extension中突遇大坑。"><span class="nav-number">1.1.</span> <span class="nav-text">最近在玩Swift，总体挺有趣，但偶尔会碰到坑，基本都是静态类型的特性导致的。其中在Protocol的Extension中突遇大坑。</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#简要介绍下Protocol_Extension"><span class="nav-number">1.1.1.</span> <span class="nav-text">简要介绍下Protocol Extension</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#很日常的场景与问题"><span class="nav-number">1.1.2.</span> <span class="nav-text">很日常的场景与问题</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#举个栗子"><span class="nav-number">1.1.3.</span> <span class="nav-text">举个栗子</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#结论"><span class="nav-number">1.2.</span> <span class="nav-text">结论</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#原因"><span class="nav-number">1.</span> <span class="nav-text">原因</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-移动市场的成熟"><span class="nav-number">1.1.</span> <span class="nav-text">1.移动市场的成熟</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-前端技术的冲击"><span class="nav-number">1.2.</span> <span class="nav-text">2.前端技术的冲击</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-行业热点转移"><span class="nav-number">1.3.</span> <span class="nav-text">3.行业热点转移</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应对措施"><span class="nav-number">2.</span> <span class="nav-text">应对措施</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-多思考"><span class="nav-number">2.1.</span> <span class="nav-text">1.多思考</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-提升技术深度"><span class="nav-number">2.2.</span> <span class="nav-text">2.提升技术深度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-提升技术广度"><span class="nav-number">2.3.</span> <span class="nav-text">3.提升技术广度</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最后"><span class="nav-number">3.</span> <span class="nav-text">最后</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
